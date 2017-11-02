@@ -93,10 +93,6 @@ my $cleanup = 0;  # Call only cleanup on the plugins to remove anything they mig
 # Call the main function, then add the rc from that to the output
 #
 $rc = main();
-# Yet again, csh sucks and doesn't have a return value.  They will have to go without
-if ($shell eq "ksh") {
-  printf("return $rc;");
-}
 exit($rc);
 
 sub main {
