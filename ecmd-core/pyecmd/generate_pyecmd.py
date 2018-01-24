@@ -292,8 +292,15 @@ def print_function(data, func_type):
         if out_args:
             print(prefix + "    return " + ", ".join(return_values))
 
+HTML_REPLACEMENTS = (
+    ("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">"), ("&#160;", " "), ("&quot;", '"'), ("&nbsp;", " ")
+)
+
 def unhtml(line):
-    return re.sub(r"<.*?>", "", line).replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&#160;", " ").replace("&quot;", '"').strip()
+    str = re.sub(r"<.*?>", "", line)
+    for replacement in HTML_REPLACEMENTS:
+        str = str.replace(*replacement)
+    return str.strip()
 
 function_re = re.compile(r"(\S+)\s+(\S+)\s*(\(.*$)")
 
