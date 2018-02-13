@@ -30,6 +30,8 @@ OutputLite out;
 #include <TestableFSIInstruction.H>
 #include <I2CInstruction.H>
 #include <TestableI2CInstruction.H>
+#include <GPIOInstruction.H>
+#include <TestableGPIOInstruction.H>
 
 void test_i2c_reset(I2CInstruction & i, const Instruction::InstructionCommand c);
 
@@ -826,6 +828,98 @@ void test_i2c_reset(I2CInstruction & i, const Instruction::InstructionCommand c)
                 REQUIRE( b_test == NULL );
                 const ecmdDataBuffer * m_test = i_test.getMask();
                 REQUIRE( m_test == NULL );
+            }
+        }
+    }
+}
+
+SCENARIO( "GPIOInstruction Class", "[Instruction]" ) {
+
+    GIVEN( "A GPIOInstruction Object") {
+        GPIOInstruction i;
+
+        THEN( "object is created correctly" ) {
+            REQUIRE( i.getVersion() == 3 );
+            REQUIRE( i.getType() == Instruction::GPIO );
+            REQUIRE( i.getCommand() == Instruction::NOCOMMAND );
+            //REQUIRE( i.getFlags() == 0 );
+        }
+
+        WHEN( "execute is called with no command" ) {
+            ecmdDataBuffer b;
+            InstructionStatus is;
+            Handle * h = NULL;
+            uint32_t rc = i.execute(b, is, &h);
+
+            THEN( "status contains info and return code" ) {
+                REQUIRE( is.instructionVersion == i.getVersion() );
+                REQUIRE( is.errorMessage.size() == 0 );
+                REQUIRE( is.rc == SERVER_COMMAND_NOT_SUPPORTED );
+                REQUIRE( rc == SERVER_COMMAND_NOT_SUPPORTED );
+            }
+        }
+
+        WHEN( "setup(GPIO_CONFIGPIN) is called on the object" ) {
+            std::string d = "empty";
+            uint32_t e = 9023;
+            uint32_t p = 34;
+            uint32_t m = 0xAABB5577;
+            gpioDioMode_t mode = GPIO_DIO_INPUT;
+            uint32_t data = 0x12345678;
+            uint32_t f = 0;
+            uint32_t rc = i.setup(Instruction::GPIO_CONFIGPIN, d, e, p, m, mode, data, f);
+
+            THEN( "internal data is correct" ) {
+                REQUIRE( i.getVersion() ==  3 );
+                REQUIRE( i.getType() == Instruction::GPIO );
+                REQUIRE( i.getCommand() == Instruction::GPIO_CONFIGPIN );
+                REQUIRE( i.getFlags() == (f | INSTRUCTION_FLAG_DEVSTR) );
+            }
+            WHEN( "flatten() is called" ) {
+                uint32_t size = i.flattenSize();
+                uint8_t flatten_data[size];
+
+                uint32_t rc = i.flatten(flatten_data, size);
+
+                THEN( "flatten_data is valid" ) {
+                    REQUIRE( rc == 0 );
+                    uint32_t * words = (uint32_t * ) flatten_data;
+                    uint32_t offset = 0;
+                    uint32_t dSize = d.size() + 1;
+                    if (dSize % sizeof(uint32_t)) {
+                        dSize += (sizeof(uint32_t) - (dSize % sizeof(uint32_t)));
+                    }
+                    REQUIRE( htonl(words[offset++]) == i.getVersion() );
+                    REQUIRE( htonl(words[offset++]) == i.getCommand() );
+                    REQUIRE( htonl(words[offset++]) == i.getFlags() );
+                    REQUIRE( htonl(words[offset++]) == e );
+                    REQUIRE( htonl(words[offset++]) == p );
+                    REQUIRE( htonl(words[offset++]) == m );
+                    REQUIRE( htonl(words[offset++]) == mode );
+                    REQUIRE( htonl(words[offset++]) == data );
+                    REQUIRE( htonl(words[offset++]) == dSize );
+                    char * d_test = ((char *)(words + offset));
+                    REQUIRE( d_test == d );
+                }
+
+                WHEN( "unflatten() is called" ) {
+                    TestableGPIOInstruction i_test;
+                    uint32_t rc = i_test.unflatten(flatten_data, size);
+
+                    THEN( "i_test is valid" ) {
+                        REQUIRE( rc == 0 );
+                        REQUIRE( i_test.getVersion() == i.getVersion() );
+                        REQUIRE( i_test.getType() == i.getType() );
+                        REQUIRE( i_test.getCommand() == i.getCommand() );
+                        REQUIRE( i_test.getFlags() == i.getFlags() );
+                        REQUIRE( i_test.getEngineId() == e );
+                        REQUIRE( i_test.getPin() == p );
+                        REQUIRE( i_test.getMask() == m );
+                        REQUIRE( i_test.getMode() == mode );
+                        REQUIRE( i_test.getData() == data );
+                        REQUIRE( i_test.getDeviceString() == d );
+                    }
+                }
             }
         }
     }

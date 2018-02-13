@@ -47,13 +47,13 @@ TESTABLE_TGT_SOURCE += InstructionStatus.C
 TESTABLE_TGT_SOURCE += InstructionFlag.C
 TESTABLE_TGT_SOURCE += FSIInstruction.C
 TESTABLE_TGT_SOURCE += I2CInstruction.C
+TESTABLE_TGT_SOURCE += GPIOInstruction.C
 TESTABLE_TGT_SOURCE += ecmdDataBuffer.C
 TESTABLE_TGT_SOURCE += ecmdDataBufferBase.C
 TESTABLE_TGT_SOURCE += OutputLite.C
 
 TGT_SOURCE := ServerFSIInstruction.C
 TGT_SOURCE += ServerGPIOInstruction.C
-TGT_SOURCE += GPIOInstruction.C
 TGT_SOURCE += ServerI2CInstruction.C
 TGT_SOURCE += ControlInstruction.C
 TGT_SOURCE += PNORInstruction.C
@@ -71,6 +71,7 @@ TGT_SOURCE_C += adal_iic.c
 
 TEST_INCLUDES := TestableFSIInstruction.H
 TEST_INCLUDES += TestableI2CInstruction.H
+TEST_INCLUDES += TestableGPIOInstruction.H
 TEST_SOURCE := server_tests.C
 
 # Combine all the includes into one variable for the build
