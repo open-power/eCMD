@@ -23,7 +23,6 @@
 //--------------------------------------------------------------------
 #include <ControlInstruction.H>
 #include <arpa/inet.h>
-#include <sys/stat.h>
 #include <iomanip>
 #include <sstream>
 #include <stdio.h>
@@ -310,39 +309,6 @@ uint32_t ControlInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus 
       }
       break;
 
-    case GETFILE:
-      {
-        char errstr[200];
-        if ( commandToRun.size() == 0 )
-        {
-          rc = o_status.rc = SERVER_INVALID_COMMAND_BLOCK_FIELD_COMMAND;
-          break;
-        }
-        struct stat buffer;
-        if( stat(commandToRun.c_str(), &buffer) != 0 )
-        {
-          snprintf(errstr, 200, "ControlInstruction::execute(GETFILE) Failed finding %s\n", commandToRun.c_str() );
-          o_status.errorMessage.append(errstr);
-          rc = o_status.rc = SERVER_CONTROL_INVALID_FILE_NAME;
-        }
-        else
-        {
-          rc = o_data.readFile( commandToRun.c_str(), ECMD_SAVE_FORMAT_BINARY_DATA, NULL );
-            
-          if ( rc ) 
-          {
-            snprintf(errstr, 200, "ControlInstruction::execute(GETFILE) Error reading file %s\n", commandToRun.c_str() );
-            o_status.errorMessage.append(errstr);
-            rc = o_status.rc = SERVER_CONTROL_READ_FILE_FAILURE;
-          }
-          else
-          {
-            rc = o_status.rc = SERVER_COMMAND_COMPLETE;
-          }
-        }
-      }
-      break;  
-
     default:
       rc = o_status.rc = SERVER_COMMAND_NOT_SUPPORTED;
       break;
@@ -363,7 +329,7 @@ uint32_t ControlInstruction::flatten(uint8_t * o_data, uint32_t i_len) const {
     o_ptr[0] = htonl(version);
     o_ptr[1] = htonl(command);
     o_ptr[2] = htonl(flags);
-    if (command == RUN_CMD || command == QUERYSP || command == GETFILE) {
+    if (command == RUN_CMD || command == QUERYSP) {
       if (commandToRun.size() > 0) {
         strcpy(((char *)(o_ptr + 3)), commandToRun.c_str());
       } else {
@@ -395,7 +361,7 @@ uint32_t ControlInstruction::unflatten(const uint8_t * i_data, uint32_t i_len) {
   if(version == 0x1 || version == 0x2 || version == 0x3 || version == 0x4) {
     command = (InstructionCommand) ntohl(i_ptr[1]);
     flags = ntohl(i_ptr[2]);
-    if (command == RUN_CMD || command == QUERYSP || command == GETFILE) {
+    if (command == RUN_CMD || command == QUERYSP) {
       commandToRun = ((char *)(i_ptr + 3));
     } else if (command == AUTH) {
       key = ntohl(i_ptr[3]);
@@ -415,7 +381,7 @@ uint32_t ControlInstruction::unflatten(const uint8_t * i_data, uint32_t i_len) {
 
 uint32_t ControlInstruction::flattenSize(void) const {
   uint32_t size = 0;
-  if (command == RUN_CMD || command == QUERYSP || command == GETFILE) {
+  if (command == RUN_CMD || command == QUERYSP) {
     size = (3 * sizeof(uint32_t)) + commandToRun.size() + 1;
   } else if (command == AUTH) {
     size = (4 * sizeof(uint32_t));
@@ -436,7 +402,7 @@ std::string ControlInstruction::dumpInstruction(void) const {
   oss << "command       : " << InstructionCommandToString(command) << std::endl;
   oss << "type          : " << InstructionTypeToString(type) << std::endl;
   oss << "flags         : " << InstructionFlagToString(flags) << std::endl;
-  if (command == RUN_CMD || command == QUERYSP || command == GETFILE) {
+  if (command == RUN_CMD || command == QUERYSP) {
     oss << "commandToRun  : " << commandToRun << std::endl;
   } else if (command == AUTH) {
     oss << "key           : " << std::hex << std::setw(8) << std::setfill('0') << key << std::dec << std::endl;
@@ -455,7 +421,7 @@ std::string ControlInstruction::dumpInstruction(void) const {
 std::string ControlInstruction::dumpInstructionShort(void) const {
   std::ostringstream oss;
 
-  if (command == RUN_CMD || command == QUERYSP || command == GETFILE) {
+  if (command == RUN_CMD || command == QUERYSP) {
     oss << commandToRun;
   } else if (command == AUTH) {
     oss << std::hex << std::setw(8) << std::setfill('0') << key;
@@ -475,7 +441,6 @@ uint64_t ControlInstruction::getHash(void) const {
   uint32_t hash = 0x0;
   switch (command) {
     case INFO:
-    case GETFILE:
     case RUN_CMD:
     case QUERYSP:
     case SNDISTEPMSG:
@@ -493,7 +458,7 @@ std::string ControlInstruction::getInstructionVars(const InstructionStatus & i_s
   std::ostringstream oss;
 
   oss << std::hex << std::setfill('0');
-  if (command == RUN_CMD || command == QUERYSP || command == GETFILE) {
+  if (command == RUN_CMD || command == QUERYSP) {
     oss << "rc: " << std::setw(8) << i_status.rc;
     oss << " commandToRun: " << commandToRun;
   } else if (command == AUTH || command == ADDAUTH) {
