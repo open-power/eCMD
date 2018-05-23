@@ -219,8 +219,6 @@ class Instruction{
 
         PSI_CMU_REG_READ,
         PSI_CMU_REG_WRITE,
-
-        GETFILE,
     } InstructionCommand;
 
     /** @name Instruction Constructor */
