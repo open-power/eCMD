@@ -40,6 +40,12 @@ extern "C" {
         const fapi2::TargetType i_associatedTargetType,
         std::list<const ecmdChipTarget*>& o_targets,
         const fapi2::TargetState i_state);
+    uint32_t fapi2GetFilteredTargets(
+        const ecmdChipTarget& i_target,
+        const fapi2::TargetType i_associatedTargetType,
+        std::list<const ecmdChipTarget*>& o_targets,
+        const fapi2::TargetFilter i_filter,
+        const fapi2::TargetState i_state);
     uint32_t fapi2GetAttribute(const ecmdChipTarget & i_target, const uint32_t i_id, fapi2::AttributeData & o_data);
 }
 
@@ -847,187 +853,31 @@ Target<K, V>::getChildren(const TargetFilter i_filter,
     static_assert( !((T & TARGET_TYPE_FILTER_CHIPLETS) == fapi2::TARGET_TYPE_NONE),
                    "not a valid chiplet for filtering" );
 
-    auto l_children = Target<K, V>::getChildren<T>(i_state);
-    auto l_child = l_children.begin();
+    std::list<const ecmdChipTarget*> l_targets;
+    std::vector<Target<T, V> > l_children;
 
-    while (l_child != l_children.end())
+    plat_target_handle_t l_handle = this->get();
+    const ecmdChipTarget * l_pEcmdTarget = l_handle;
+    uint32_t l_rc = fapi2GetFilteredTargets(*l_pEcmdTarget, T, l_targets, i_filter, i_state);
+
+    if (l_rc)
     {
-        uint64_t l_filter_mask = 0x0;
-        uint32_t l_pervasive_chipunit = 0; // default to invalid chipunit
-        if (T == fapi2::TARGET_TYPE_PERV)
-        {
-            // use chipunit of the pervasive target
-            plat_target_handle_t l_handle = l_child->get();
-            const ecmdChipTarget * l_pEcmdTarget = l_handle;
-            l_pervasive_chipunit = l_pEcmdTarget->chipUnitNum;
-        }
-        else
-        {
-            // get pervasive parent target
-            std::list<const ecmdChipTarget*> l_targets;
+        // ERROR
+        return l_children;
+    }
 
-            plat_target_handle_t l_handle = l_child->get();
-            const ecmdChipTarget * l_pEcmdTarget = l_handle;
-            uint32_t l_rc = fapi2GetAssociatedTargets(*l_pEcmdTarget, fapi2::TARGET_TYPE_PERV, l_targets, TARGET_STATE_FUNCTIONAL);
+    if (l_targets.empty())
+    {
+        // ERROR
+        return l_children;
+    }
 
-            // check if we get back a valid target
-            if ((l_rc == 0) && (!l_targets.empty()))
-            {
-                l_pervasive_chipunit = l_targets.front()->chipUnitNum;
-            }
-        }
+    auto l_target = l_targets.begin();
 
-        switch (l_pervasive_chipunit)
-        {
-            case 1:
-                l_filter_mask = TARGET_FILTER_TP;         // Pervasive 1
-                break;
-            case 2:
-                l_filter_mask = TARGET_FILTER_NEST_NORTH; // Pervasive 2
-                break;
-            case 3:
-                l_filter_mask = TARGET_FILTER_NEST_EAST; // Pervasive 3
-                break;
-            case 4:
-                l_filter_mask = TARGET_FILTER_NEST_SOUTH;  // Pervasive 4
-                break;
-            case 5:
-                l_filter_mask = TARGET_FILTER_NEST_WEST;  // Pervasive 5
-                break;
-            case 6:
-                l_filter_mask = TARGET_FILTER_XBUS;       // Pervasive 6
-                break;
-            case 7:
-                l_filter_mask = TARGET_FILTER_MC_WEST;    // Pervasive 7
-                break;
-            case 8:
-                l_filter_mask = TARGET_FILTER_MC_EAST;    // Pervasive 8
-                break;
-            case 9:
-                l_filter_mask = TARGET_FILTER_OBUS0;      // Pervasive 9
-                break;
-            case 10:
-                l_filter_mask = TARGET_FILTER_OBUS1;      // Pervasive 10
-                break;
-            case 11:
-                l_filter_mask = TARGET_FILTER_OBUS2;      // Pervasive 11
-                break;
-            case 12:
-                l_filter_mask = TARGET_FILTER_OBUS3;      // Pervasive 12
-                break;
-            case 13:
-                l_filter_mask = TARGET_FILTER_PCI0;       // Pervasive 13
-                break;
-            case 14:
-                l_filter_mask = TARGET_FILTER_PCI1;       // Pervasive 14
-                break;
-            case 15:
-                l_filter_mask = TARGET_FILTER_PCI2;       // Pervasive 15
-                break;
-            case 16:
-                l_filter_mask = TARGET_FILTER_CACHE0;     // Pervasive 16
-                break;
-            case 17:
-                l_filter_mask = TARGET_FILTER_CACHE1;     // Pervasive 17
-                break;
-            case 18:
-                l_filter_mask = TARGET_FILTER_CACHE2;     // Pervasive 18
-                break;
-            case 19:
-                l_filter_mask = TARGET_FILTER_CACHE3;     // Pervasive 19
-                break;
-            case 20:
-                l_filter_mask = TARGET_FILTER_CACHE4;     // Pervasive 20
-                break;
-            case 21:
-                l_filter_mask = TARGET_FILTER_CACHE5;     // Pervasive 21
-                break;
-            case 32:
-                l_filter_mask = TARGET_FILTER_CORE0;      // Pervasive 32
-                break;
-            case 33:
-                l_filter_mask = TARGET_FILTER_CORE1;      // Pervasive 33
-                break;
-            case 34:
-                l_filter_mask = TARGET_FILTER_CORE2;      // Pervasive 34
-                break;
-            case 35:
-                l_filter_mask = TARGET_FILTER_CORE3;      // Pervasive 35
-                break;
-            case 36:
-                l_filter_mask = TARGET_FILTER_CORE4;      // Pervasive 36
-                break;
-            case 37:
-                l_filter_mask = TARGET_FILTER_CORE5;      // Pervasive 37
-                break;
-            case 38:
-                l_filter_mask = TARGET_FILTER_CORE6;      // Pervasive 38
-                break;
-            case 39:
-                l_filter_mask = TARGET_FILTER_CORE7;      // Pervasive 39
-                break;
-            case 40:
-                l_filter_mask = TARGET_FILTER_CORE8;      // Pervasive 40
-                break;
-            case 41:
-                l_filter_mask = TARGET_FILTER_CORE9;      // Pervasive 41
-                break;
-            case 42:
-                l_filter_mask = TARGET_FILTER_CORE10;     // Pervasive 42
-                break;
-            case 43:
-                l_filter_mask = TARGET_FILTER_CORE11;     // Pervasive 43
-                break;
-            case 44:
-                l_filter_mask = TARGET_FILTER_CORE12;     // Pervasive 44
-                break;
-            case 45:
-                l_filter_mask = TARGET_FILTER_CORE13;     // Pervasive 45
-                break;
-            case 46:
-                l_filter_mask = TARGET_FILTER_CORE14;     // Pervasive 46
-                break;
-            case 47:
-                l_filter_mask = TARGET_FILTER_CORE15;     // Pervasive 47
-                break;
-            case 48:
-                l_filter_mask = TARGET_FILTER_CORE16;     // Pervasive 48
-                break;
-            case 49:
-                l_filter_mask = TARGET_FILTER_CORE17;     // Pervasive 49
-                break;
-            case 50:
-                l_filter_mask = TARGET_FILTER_CORE18;     // Pervasive 50
-                break;
-            case 51:
-                l_filter_mask = TARGET_FILTER_CORE19;     // Pervasive 51
-                break;
-            case 52:
-                l_filter_mask = TARGET_FILTER_CORE20;     // Pervasive 52
-                break;
-            case 53:
-                l_filter_mask = TARGET_FILTER_CORE21;     // Pervasive 53
-                break;
-            case 54:
-                l_filter_mask = TARGET_FILTER_CORE22;     // Pervasive 54
-                break;
-            case 55:
-                l_filter_mask = TARGET_FILTER_CORE23;     // Pervasive 55
-                break;
-            default:
-                l_filter_mask = 0x0;
-                break;
-        }
-
-        if ((l_filter_mask & i_filter) == 0x0)
-        {
-            // filter out
-            l_child = l_children.erase(l_child);
-        }
-        else
-        {
-            l_child++;
-        }
+    while (l_target != l_targets.end())
+    {
+        l_children.push_back(Target<T, V>(plat_target_handle_t(*l_target)));
+        l_target++;
     }
 
     return l_children;
