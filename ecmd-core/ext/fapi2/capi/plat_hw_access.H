@@ -35,7 +35,65 @@
 
 namespace fapi2plat
 {
-const fapi2::TargetType TARGET_TYPE_SCOM_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
+    fapi2::ReturnCode getScom(ecmdChipTarget& i_target,
+                              const uint64_t i_address,
+                              fapi2::buffer<uint64_t>& o_data);
+
+    fapi2::ReturnCode putScom(ecmdChipTarget & i_target,
+                              const uint64_t i_address,
+                              const fapi2::buffer<uint64_t> i_data);
+
+    fapi2::ReturnCode putScomUnderMask(ecmdChipTarget & i_target,
+                                       const uint64_t i_address,
+                                       const fapi2::buffer<uint64_t> i_data,
+                                       const fapi2::buffer<uint64_t> i_mask);
+
+    fapi2::ReturnCode getCfamRegister(ecmdChipTarget& i_target,
+                                      const uint32_t i_address,
+                                      fapi2::buffer<uint32_t>& o_data);
+
+    fapi2::ReturnCode putCfamRegister(ecmdChipTarget& i_target,
+                                      const uint32_t i_address,
+                                      const fapi2::buffer<uint32_t> i_data);
+
+    fapi2::ReturnCode getRing(ecmdChipTarget & i_target,
+                              const scanRingId_t i_address,
+                              fapi2::variable_buffer & o_data,
+                              const uint32_t i_ringMode);
+
+    fapi2::ReturnCode putRing(ecmdChipTarget & i_target,
+                              const RingId_t i_ringID,
+                              const fapi2::RingMode i_ringMode);
+
+    fapi2::ReturnCode putRing(ecmdChipTarget & i_target,
+                              const scanRingId_t i_address,
+                              const fapi2::variable_buffer & i_data,
+                              const uint32_t i_ringMode);
+
+    fapi2::ReturnCode getSpy(ecmdChipTarget & i_target,
+                             const char * const i_spyId,
+                             fapi2::variable_buffer& o_data);
+
+    fapi2::ReturnCode putSpy(ecmdChipTarget & i_target,
+                             const char * const i_spyId,
+                             const fapi2::variable_buffer& i_data);
+
+    fapi2::ReturnCode getSpyImage(ecmdChipTarget & i_target,
+                                  const char * const i_spyId,
+                                  fapi2::variable_buffer& o_data,
+                                  const fapi2::variable_buffer& i_imageData);
+
+    fapi2::ReturnCode putSpyImage(ecmdChipTarget & i_target,
+                                  const char* const i_spyId,
+                                  const fapi2::variable_buffer& i_data,
+                                  fapi2::variable_buffer& o_imageData);
+
+    uint32_t createMCAddress(const uint64_t i_address,
+                             const fapi2::MulticastGroup i_group,
+                             const fapi2::MulticastType i_multicastType,
+                             uint64_t & o_address);
+
+    const fapi2::TargetType TARGET_TYPE_SCOM_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
 #ifdef FAPI_2_Z
         fapi2::TARGET_TYPE_SC_CHIP |
 #endif
@@ -67,13 +125,13 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
         fapi2::TARGET_TYPE_MCC |
         fapi2::TARGET_TYPE_MEM_PORT;
 
-const fapi2::TargetType TARGET_TYPE_CFAM_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
+    const fapi2::TargetType TARGET_TYPE_CFAM_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
 #ifdef FAPI_2_Z
         fapi2::TARGET_TYPE_SC_CHIP |
 #endif
         fapi2::TARGET_TYPE_MEMBUF_CHIP;
 
-const fapi2::TargetType TARGET_TYPE_SCAN_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
+    const fapi2::TargetType TARGET_TYPE_SCAN_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
 #ifdef FAPI_2_Z
         fapi2::TARGET_TYPE_SC_CHIP |
 #endif
@@ -84,70 +142,175 @@ const fapi2::TargetType TARGET_TYPE_SCAN_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
         fapi2::TARGET_TYPE_OBUS |
         fapi2::TARGET_TYPE_MCBIST |
         fapi2::TARGET_TYPE_MC;
-//--------------------------------------------------------------------------
-// HW Communication Functions
-//--------------------------------------------------------------------------
 
-/// @brief Platform-level implementation called by GetScom()
-///  Hardware procedures writers will not call this function.
-/// @brief Reads a SCOM register from a chip.
-/// @param[in]  i_target     HW target to operate on.
-/// @param[in]  i_address    SCOM register address to read from.
-/// @param[out] o_data       Buffer that holds data read from HW target.
-/// @return fapi::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
-fapi2::ReturnCode getScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET, fapi2::plat_target_handle_t>& i_target,
-                          const uint64_t i_address,
-                          fapi2::buffer<uint64_t>& o_data);
+    template< fapi2::TargetType K, fapi2::TargetType L >
+    constexpr void checkValidAccess()
+    {
+        static_assert( ((K & L) != fapi2::TARGET_TYPE_NONE), "Invalid TargetType for HW access" );
+    }
 
-fapi2::ReturnCode putScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET, fapi2::plat_target_handle_t>& i_target,
-                          const uint64_t i_address,
-                          const fapi2::buffer<uint64_t> i_data);
+    template< fapi2::TargetType K, typename V >
+    inline fapi2::ReturnCode getScom(const fapi2::Target<K, V>& i_target,
+                                     const uint64_t i_address,
+                                     fapi2::buffer<uint64_t>& o_data)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCOM_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
 
-fapi2::ReturnCode putScomUnderMask(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET, fapi2::plat_target_handle_t>& i_target,
-                                   const uint64_t i_address,
-                                   const fapi2::buffer<uint64_t> i_data,
-                                   const fapi2::buffer<uint64_t> i_mask);
+        const fapi2::plat_target_handle_t & l_handle = i_target.get();
 
-fapi2::ReturnCode getCfamRegister(const fapi2::Target<fapi2plat::TARGET_TYPE_CFAM_TARGET, fapi2::plat_target_handle_t>& i_target,
-                                  const uint32_t i_address,
-                                  fapi2::buffer<uint32_t>& o_data);
+        uint64_t l_address = i_address;
+        if (l_handle.multicast)
+        {
+            uint32_t rc = createMCAddress(i_address, l_handle.multicast_group, l_handle.multicast_type, l_address);
+            if (rc)
+            {
+                // ERROR
+                return fapi2::FAPI2_RC_INVALID_PARAMETER;
+            }
+        }
+        return fapi2plat::getScom(ecmdTarget, l_address, o_data);
+    }
 
-fapi2::ReturnCode putCfamRegister(const fapi2::Target<fapi2plat::TARGET_TYPE_CFAM_TARGET, fapi2::plat_target_handle_t>& i_target,
-                                  const uint32_t i_address,
-                                  const fapi2::buffer<uint32_t> i_data);
+    template< fapi2::TargetType K, typename V >
+    inline fapi2::ReturnCode putScom(const fapi2::Target<K, V>& i_target,
+                                     const uint64_t i_address,
+                                     const fapi2::buffer<uint64_t> i_data)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCOM_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
 
-fapi2::ReturnCode getRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
-                          const scanRingId_t i_address,
-                          fapi2::variable_buffer& o_data,
-                          const fapi2::RingMode i_ringMode);
+        const fapi2::plat_target_handle_t & l_handle = i_target.get();
 
-fapi2::ReturnCode putRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
-                          const RingId_t i_ringID,
-                          const fapi2::RingMode i_ringMode);
+        uint64_t l_address = i_address;
+        if (l_handle.multicast)
+        {
+            uint32_t rc = createMCAddress(i_address, l_handle.multicast_group, l_handle.multicast_type, l_address);
+            if (rc)
+            {
+                // ERROR
+                return fapi2::FAPI2_RC_INVALID_PARAMETER;
+            }
+        }
+        return fapi2plat::putScom(ecmdTarget, l_address, i_data);
+    }
 
-fapi2::ReturnCode putRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
-                          const scanRingId_t i_address,
-                          const fapi2::variable_buffer& i_data,
-                          const fapi2::RingMode i_ringMode);
+    template< fapi2::TargetType K, typename V >
+    inline fapi2::ReturnCode putScomUnderMask(const fapi2::Target<K, V>& i_target,
+                                              const uint64_t i_address,
+                                              const fapi2::buffer<uint64_t> i_data,
+                                              const fapi2::buffer<uint64_t> i_mask)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCOM_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::putScomUnderMask(ecmdTarget, i_address, i_data, i_mask);
+    }
 
-fapi2::ReturnCode getSpy(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
-                         const char* const i_spyId,
-                         fapi2::variable_buffer& o_data);
+    template< fapi2::TargetType K, typename V >
+    inline fapi2::ReturnCode getCfamRegister(const fapi2::Target<K, V>& i_target,
+                                             const uint32_t i_address,
+                                             fapi2::buffer<uint32_t>& o_data)
+    {
+        checkValidAccess<K, TARGET_TYPE_CFAM_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget); 
+        return fapi2plat::getCfamRegister(ecmdTarget, i_address, o_data);
+    }
 
-fapi2::ReturnCode putSpy(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
-                         const char* const i_spyId,
-                         const fapi2::variable_buffer& i_data);
+    template< fapi2::TargetType K, typename V >
+    inline fapi2::ReturnCode putCfamRegister(const fapi2::Target<K, V>& i_target,
+                                             const uint32_t i_address,
+                                             const fapi2::buffer<uint32_t> i_data)
+    {
+        checkValidAccess<K, TARGET_TYPE_CFAM_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget); 
+        return fapi2plat::putCfamRegister(ecmdTarget, i_address, i_data);
+    }
 
-fapi2::ReturnCode getSpyImage(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
-                              const char* const i_spyId,
-                              fapi2::variable_buffer& o_data,
-                              const fapi2::variable_buffer& i_imageData);
+    template< fapi2::TargetType K, typename V >
+    inline fapi2::ReturnCode getRing(const fapi2::Target<K, V>& i_target,
+                                     const scanRingId_t i_address,
+                                     fapi2::variable_buffer& o_data,
+                                     const fapi2::RingMode i_ringMode)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::getRing(ecmdTarget, i_address, o_data, i_ringMode);
+    }
 
-fapi2::ReturnCode putSpyImage(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
-                              const char* const i_spyId,
+    template< fapi2::TargetType K, typename V >
+    fapi2::ReturnCode putRing(const fapi2::Target<K, V>& i_target,
+                              const RingId_t i_ringID,
+                              const fapi2::RingMode i_ringMode)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::putRing(ecmdTarget, i_ringID, i_ringMode);
+    }
+
+    template< fapi2::TargetType K, typename V >
+    fapi2::ReturnCode putRing(const fapi2::Target<K, V>& i_target,
+                              const scanRingId_t i_address,
                               const fapi2::variable_buffer& i_data,
-                              fapi2::variable_buffer& o_imageData);
+                              const fapi2::RingMode i_ringMode)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::putRing(ecmdTarget, i_address, i_data, i_ringMode);
+    }
 
+    template< fapi2::TargetType K, typename V >
+    fapi2::ReturnCode getSpy(const fapi2::Target<K, V>& i_target,
+                             const char * const i_spyId,
+                             fapi2::variable_buffer& o_data)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::getSpy(ecmdTarget, i_spyId, o_data);
+    }
+
+    template< fapi2::TargetType K, typename V >
+    fapi2::ReturnCode putSpy(const fapi2::Target<K, V>& i_target,
+                             const char * const i_spyId,
+                             const fapi2::variable_buffer& i_data)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::putSpy(ecmdTarget, i_spyId, i_data);
+    }
+
+    template< fapi2::TargetType K, typename V >
+    fapi2::ReturnCode getSpyImage(const fapi2::Target<K, V>& i_target,
+                                  const char * const i_spyId,
+                                  fapi2::variable_buffer& o_data,
+                                  const fapi2::variable_buffer& i_imageData)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::getSpyImage(ecmdTarget, i_spyId, o_data, i_imageData);
+    }
+
+    template< fapi2::TargetType K, typename V >
+    fapi2::ReturnCode putSpyImage(const fapi2::Target<K, V>& i_target,
+                                  const char* const i_spyId,
+                                  const fapi2::variable_buffer& i_data,
+                                  fapi2::variable_buffer& o_imageData)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::putSpyImage(ecmdTarget, i_spyId, i_data, o_imageData);
+    }
 };
 
 #endif // _FAPI2_PLAT_HWACCESS_H_

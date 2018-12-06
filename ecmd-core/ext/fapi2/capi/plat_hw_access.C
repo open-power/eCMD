@@ -1364,75 +1364,19 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
 #endif
 
 
-    template< fapi2::TargetType K, typename V >
-    inline fapi2::ReturnCode getScomTemplate(const fapi2::Target<K, V>& i_target,
-                                             const uint64_t i_address,
-                                             fapi2::buffer<uint64_t>& o_data)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-
-        const fapi2::plat_target_handle_t & l_handle = i_target.get();
-
-        uint64_t l_address = i_address;
-        if (l_handle.multicast)
-        {
-            uint32_t rc = createMCAddress(i_address, l_handle.multicast_group, l_handle.multicast_type, l_address);
-            if (rc)
-            {
-                // ERROR
-                return fapi2::FAPI2_RC_INVALID_PARAMETER;
-            }
-        }
-        return fapi2plat::getScom(ecmdTarget, l_address, o_data);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    inline fapi2::ReturnCode putScomTemplate(const fapi2::Target<K, V>& i_target,
-                                             const uint64_t i_address,
-                                             const fapi2::buffer<uint64_t> i_data)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-
-        const fapi2::plat_target_handle_t & l_handle = i_target.get();
-
-        uint64_t l_address = i_address;
-        if (l_handle.multicast)
-        {
-            uint32_t rc = createMCAddress(i_address, l_handle.multicast_group, l_handle.multicast_type, l_address);
-            if (rc)
-            {
-                // ERROR
-                return fapi2::FAPI2_RC_INVALID_PARAMETER;
-            }
-        }
-        return fapi2plat::putScom(ecmdTarget, l_address, i_data);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    inline fapi2::ReturnCode putScomUnderMaskTemplate(const fapi2::Target<K, V>& i_target,
-                                              const uint64_t i_address,
-                                              const fapi2::buffer<uint64_t> i_data,
-                                              const fapi2::buffer<uint64_t> i_mask)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::putScomUnderMask(ecmdTarget, i_address, i_data, i_mask);
-    }
 
     fapi2::ReturnCode getScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               fapi2::buffer<uint64_t>& o_data)
     {
-        return getScomTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getScom<>(i_target, i_address, o_data);
     }
 
     fapi2::ReturnCode getScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               fapi2::buffer<uint64_t>& o_data)
     {
-        return getScomTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getScom<>(i_target, i_address, o_data);
     }
 
 #ifdef FAPI_2_Z
@@ -1440,35 +1384,35 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const uint64_t i_address,
                               fapi2::buffer<uint64_t>& o_data)
     {
-        return getScomTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getScom<>(i_target, i_address, o_data);
     }
 
     fapi2::ReturnCode getScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_7, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               fapi2::buffer<uint64_t>& o_data)
     {
-        return getScomTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getScom<>(i_target, i_address, o_data);
     }
 
     fapi2::ReturnCode getScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_8_NO_Z, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               fapi2::buffer<uint64_t>& o_data)
     {
-        return getScomTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getScom<>(i_target, i_address, o_data);
     }
 
     fapi2::ReturnCode getScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_10, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               fapi2::buffer<uint64_t>& o_data)
     {
-        return getScomTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getScom<>(i_target, i_address, o_data);
     }
 
     fapi2::ReturnCode getScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_11_NO_Z, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               fapi2::buffer<uint64_t>& o_data)
     {
-        return getScomTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getScom<>(i_target, i_address, o_data);
     }
 #endif
 
@@ -1476,14 +1420,14 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const uint64_t i_address,
                               const fapi2::buffer<uint64_t> i_data)
     {
-        return putScomTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putScom<>(i_target, i_address, i_data);
     }
 
     fapi2::ReturnCode putScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               const fapi2::buffer<uint64_t> i_data)
     {
-        return putScomTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putScom<>(i_target, i_address, i_data);
     }
 
 #ifdef FAPI_2_Z
@@ -1491,35 +1435,35 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const uint64_t i_address,
                               const fapi2::buffer<uint64_t> i_data)
     {
-        return putScomTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putScom<>(i_target, i_address, i_data);
     }
 
     fapi2::ReturnCode putScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_7, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               const fapi2::buffer<uint64_t> i_data)
     {
-        return putScomTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putScom<>(i_target, i_address, i_data);
     }
 
     fapi2::ReturnCode putScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_8_NO_Z, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               const fapi2::buffer<uint64_t> i_data)
     {
-        return putScomTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putScom<>(i_target, i_address, i_data);
     }
 
     fapi2::ReturnCode putScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_10, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               const fapi2::buffer<uint64_t> i_data)
     {
-        return putScomTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putScom<>(i_target, i_address, i_data);
     }
 
     fapi2::ReturnCode putScom(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_11_NO_Z, fapi2::plat_target_handle_t>& i_target,
                               const uint64_t i_address,
                               const fapi2::buffer<uint64_t> i_data)
     {
-        return putScomTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putScom<>(i_target, i_address, i_data);
     }
 #endif
 
@@ -1528,7 +1472,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                        const fapi2::buffer<uint64_t> i_data,
                                        const fapi2::buffer<uint64_t> i_mask)
     {
-        return putScomUnderMaskTemplate<>(i_target, i_address, i_data, i_mask);
+        return fapi2plat::putScomUnderMask<>(i_target, i_address, i_data, i_mask);
     }
 
     fapi2::ReturnCode putScomUnderMask(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
@@ -1536,7 +1480,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                        const fapi2::buffer<uint64_t> i_data,
                                        const fapi2::buffer<uint64_t> i_mask)
     {
-        return putScomUnderMaskTemplate<>(i_target, i_address, i_data, i_mask);
+        return fapi2plat::putScomUnderMask<>(i_target, i_address, i_data, i_mask);
     }
 
 #ifdef FAPI_2_Z
@@ -1545,7 +1489,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                        const fapi2::buffer<uint64_t> i_data,
                                        const fapi2::buffer<uint64_t> i_mask)
     {
-        return putScomUnderMaskTemplate<>(i_target, i_address, i_data, i_mask);
+        return fapi2plat::putScomUnderMask<>(i_target, i_address, i_data, i_mask);
     }
 
     fapi2::ReturnCode putScomUnderMask(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_7, fapi2::plat_target_handle_t>& i_target,
@@ -1553,7 +1497,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                        const fapi2::buffer<uint64_t> i_data,
                                        const fapi2::buffer<uint64_t> i_mask)
     {
-        return putScomUnderMaskTemplate<>(i_target, i_address, i_data, i_mask);
+        return fapi2plat::putScomUnderMask<>(i_target, i_address, i_data, i_mask);
     }
 
     fapi2::ReturnCode putScomUnderMask(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_8_NO_Z, fapi2::plat_target_handle_t>& i_target,
@@ -1561,7 +1505,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                        const fapi2::buffer<uint64_t> i_data,
                                        const fapi2::buffer<uint64_t> i_mask)
     {
-        return putScomUnderMaskTemplate<>(i_target, i_address, i_data, i_mask);
+        return fapi2plat::putScomUnderMask<>(i_target, i_address, i_data, i_mask);
     }
 
     fapi2::ReturnCode putScomUnderMask(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_10, fapi2::plat_target_handle_t>& i_target,
@@ -1569,7 +1513,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                        const fapi2::buffer<uint64_t> i_data,
                                        const fapi2::buffer<uint64_t> i_mask)
     {
-        return putScomUnderMaskTemplate<>(i_target, i_address, i_data, i_mask);
+        return fapi2plat::putScomUnderMask<>(i_target, i_address, i_data, i_mask);
     }
 
     fapi2::ReturnCode putScomUnderMask(const fapi2::Target<fapi2plat::TARGET_TYPE_SCOM_TARGET_14_11_NO_Z, fapi2::plat_target_handle_t>& i_target,
@@ -1577,35 +1521,15 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                        const fapi2::buffer<uint64_t> i_data,
                                        const fapi2::buffer<uint64_t> i_mask)
     {
-        return putScomUnderMaskTemplate<>(i_target, i_address, i_data, i_mask);
+        return fapi2plat::putScomUnderMask<>(i_target, i_address, i_data, i_mask);
     }
 #endif
-
-    template< fapi2::TargetType K, typename V >
-    inline fapi2::ReturnCode getCfamRegisterTemplate(const fapi2::Target<K, V>& i_target,
-                                                     const uint32_t i_address,
-                                                     fapi2::buffer<uint32_t>& o_data)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget); 
-        return fapi2plat::getCfamRegister(ecmdTarget, i_address, o_data);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    inline fapi2::ReturnCode putCfamRegisterTemplate(const fapi2::Target<K, V>& i_target,
-                                                     const uint32_t i_address,
-                                                     const fapi2::buffer<uint32_t> i_data)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget); 
-        return fapi2plat::putCfamRegister(ecmdTarget, i_address, i_data);
-    }
 
     fapi2::ReturnCode getCfamRegister(const fapi2::Target<fapi2plat::TARGET_TYPE_CFAM_TARGET, fapi2::plat_target_handle_t>& i_target,
                                       const uint32_t i_address,
                                       fapi2::buffer<uint32_t>& o_data)
     {
-        return getCfamRegisterTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getCfamRegister<>(i_target, i_address, o_data);
     }
 
 #ifdef FAPI_2_Z
@@ -1613,7 +1537,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                       const uint32_t i_address,
                                       fapi2::buffer<uint32_t>& o_data)
     {
-        return getCfamRegisterTemplate<>(i_target, i_address, o_data);
+        return fapi2plat::getCfamRegister<>(i_target, i_address, o_data);
     }
 #endif
 
@@ -1621,7 +1545,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                       const uint32_t i_address,
                                       const fapi2::buffer<uint32_t> i_data)
     {
-        return putCfamRegisterTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putCfamRegister<>(i_target, i_address, i_data);
     }
 
 #ifdef FAPI_2_Z
@@ -1629,100 +1553,16 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                       const uint32_t i_address,
                                       const fapi2::buffer<uint32_t> i_data)
     {
-        return putCfamRegisterTemplate<>(i_target, i_address, i_data);
+        return fapi2plat::putCfamRegister<>(i_target, i_address, i_data);
     }
 #endif
-
-    template< fapi2::TargetType K, typename V >
-    inline fapi2::ReturnCode getRingTemplate(const fapi2::Target<K, V>& i_target,
-                                             const scanRingId_t i_address,
-                                             fapi2::variable_buffer& o_data,
-                                             const fapi2::RingMode i_ringMode)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::getRing(ecmdTarget, i_address, o_data, i_ringMode);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    fapi2::ReturnCode putRingTemplate(const fapi2::Target<K, V>& i_target,
-                                      const RingId_t i_ringID,
-                                      const fapi2::RingMode i_ringMode)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::putRing(ecmdTarget, i_ringID, i_ringMode);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    fapi2::ReturnCode putRingTemplate(const fapi2::Target<K, V>& i_target,
-                                      const RingID i_ringID,
-                                      const fapi2::RingMode i_ringMode)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::putRing(ecmdTarget, i_ringID, i_ringMode);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    fapi2::ReturnCode putRingTemplate(const fapi2::Target<K, V>& i_target,
-                                      const scanRingId_t i_address,
-                                      const fapi2::variable_buffer& i_data,
-                                      const fapi2::RingMode i_ringMode)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::putRing(ecmdTarget, i_address, i_data, i_ringMode);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    fapi2::ReturnCode getSpyTemplate(const fapi2::Target<K, V>& i_target,
-                                     const char * const i_spyId,
-                                     fapi2::variable_buffer& o_data)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::getSpy(ecmdTarget, i_spyId, o_data);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    fapi2::ReturnCode putSpyTemplate(const fapi2::Target<K, V>& i_target,
-                                     const char * const i_spyId,
-                                     const fapi2::variable_buffer& i_data)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::putSpy(ecmdTarget, i_spyId, i_data);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    fapi2::ReturnCode getSpyImageTemplate(const fapi2::Target<K, V>& i_target,
-                                          const char * const i_spyId,
-                                          fapi2::variable_buffer& o_data,
-                                          const fapi2::variable_buffer& i_imageData)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::getSpyImage(ecmdTarget, i_spyId, o_data, i_imageData);
-    }
-
-    template< fapi2::TargetType K, typename V >
-    fapi2::ReturnCode putSpyImageTemplate(const fapi2::Target<K, V>& i_target,
-                                          const char* const i_spyId,
-                                          const fapi2::variable_buffer& i_data,
-                                          fapi2::variable_buffer& o_imageData)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_target, ecmdTarget);
-        return fapi2plat::putSpyImage(ecmdTarget, i_spyId, i_data, o_imageData);
-    }
 
     fapi2::ReturnCode getRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
                               const scanRingId_t i_address,
                               fapi2::variable_buffer& o_data,
                               const fapi2::RingMode i_ringMode)
     {
-        return getRingTemplate<>(i_target, i_address, o_data, i_ringMode);
+        return fapi2plat::getRing<>(i_target, i_address, o_data, i_ringMode);
     }
 
     fapi2::ReturnCode getRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
@@ -1730,7 +1570,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               fapi2::variable_buffer& o_data,
                               const fapi2::RingMode i_ringMode)
     {
-        return getRingTemplate<>(i_target, i_address, o_data, i_ringMode);
+        return fapi2plat::getRing<>(i_target, i_address, o_data, i_ringMode);
     }
 
 #ifdef FAPI_2_Z
@@ -1739,7 +1579,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               fapi2::variable_buffer& o_data,
                               const fapi2::RingMode i_ringMode)
     {
-        return getRingTemplate<>(i_target, i_address, o_data, i_ringMode);
+        return fapi2plat::getRing<>(i_target, i_address, o_data, i_ringMode);
     }
 #endif
 
@@ -1747,14 +1587,14 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const RingId_t i_ringID,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_ringID, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_ringID, i_ringMode);
     }
 
     fapi2::ReturnCode putRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
                               const RingId_t i_ringID,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_ringID, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_ringID, i_ringMode);
     }
 
 #ifdef FAPI_2_Z
@@ -1762,22 +1602,33 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const RingId_t i_ringID,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_ringID, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_ringID, i_ringMode);
     }
 #endif
+
+    template< fapi2::TargetType K, typename V >
+    fapi2::ReturnCode putRing(const fapi2::Target<K, V>& i_target,
+                              const RingID i_ringID,
+                              const fapi2::RingMode i_ringMode)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::putRing(ecmdTarget, i_ringID, i_ringMode);
+    }
 
     fapi2::ReturnCode putRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET, fapi2::plat_target_handle_t>& i_target,
                               const RingID i_ringID,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_ringID, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_ringID, i_ringMode);
     }
 
     fapi2::ReturnCode putRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
                               const RingID i_ringID,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_ringID, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_ringID, i_ringMode);
     }
 
 #ifdef FAPI_2_Z
@@ -1785,7 +1636,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const RingID i_ringID,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_ringID, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_ringID, i_ringMode);
     }
 #endif
 
@@ -1794,7 +1645,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const fapi2::variable_buffer& i_data,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_address, i_data, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_address, i_data, i_ringMode);
     }
 
     fapi2::ReturnCode putRing(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
@@ -1802,7 +1653,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const fapi2::variable_buffer& i_data,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_address, i_data, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_address, i_data, i_ringMode);
     }
 
 #ifdef FAPI_2_Z
@@ -1811,7 +1662,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                               const fapi2::variable_buffer& i_data,
                               const fapi2::RingMode i_ringMode)
     {
-        return putRingTemplate<>(i_target, i_address, i_data, i_ringMode);
+        return fapi2plat::putRing<>(i_target, i_address, i_data, i_ringMode);
     }
 #endif
 
@@ -1819,14 +1670,14 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                              const char * const i_spyId,
                              fapi2::variable_buffer& o_data)
     {
-        return getSpyTemplate<>(i_target, i_spyId, o_data);
+        return fapi2plat::getSpy<>(i_target, i_spyId, o_data);
     }
 
     fapi2::ReturnCode getSpy(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
                              const char * const i_spyId,
                              fapi2::variable_buffer& o_data)
     {
-        return getSpyTemplate<>(i_target, i_spyId, o_data);
+        return fapi2plat::getSpy<>(i_target, i_spyId, o_data);
     }
 
 #ifdef FAPI_2_Z
@@ -1834,7 +1685,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                              const char * const i_spyId,
                              fapi2::variable_buffer& o_data)
     {
-        return getSpyTemplate<>(i_target, i_spyId, o_data);
+        return fapi2plat::getSpy<>(i_target, i_spyId, o_data);
     }
 #endif
 
@@ -1842,14 +1693,14 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                              const char * const i_spyId,
                              const fapi2::variable_buffer& i_data)
     {
-        return putSpyTemplate<>(i_target, i_spyId, i_data);
+        return fapi2plat::putSpy<>(i_target, i_spyId, i_data);
     }
 
     fapi2::ReturnCode putSpy(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
                              const char * const i_spyId,
                              const fapi2::variable_buffer& i_data)
     {
-        return putSpyTemplate<>(i_target, i_spyId, i_data);
+        return fapi2plat::putSpy<>(i_target, i_spyId, i_data);
     }
 
 #ifdef FAPI_2_Z
@@ -1857,7 +1708,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                              const char * const i_spyId,
                              const fapi2::variable_buffer& i_data)
     {
-        return putSpyTemplate<>(i_target, i_spyId, i_data);
+        return fapi2plat::putSpy<>(i_target, i_spyId, i_data);
     }
 #endif
 
@@ -1866,7 +1717,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                   fapi2::variable_buffer& o_data,
                                   const fapi2::variable_buffer& i_imageData)
     {
-        return getSpyImageTemplate<>(i_target, i_spyId, o_data, i_imageData);
+        return fapi2plat::getSpyImage<>(i_target, i_spyId, o_data, i_imageData);
     }
 
     fapi2::ReturnCode getSpyImage(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
@@ -1874,7 +1725,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                   fapi2::variable_buffer& o_data,
                                   const fapi2::variable_buffer& i_imageData)
     {
-        return getSpyImageTemplate<>(i_target, i_spyId, o_data, i_imageData);
+        return fapi2plat::getSpyImage<>(i_target, i_spyId, o_data, i_imageData);
     }
 
 #ifdef FAPI_2_Z
@@ -1883,7 +1734,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                   fapi2::variable_buffer& o_data,
                                   const fapi2::variable_buffer& i_imageData)
     {
-        return getSpyImageTemplate<>(i_target, i_spyId, o_data, i_imageData);
+        return fapi2plat::getSpyImage<>(i_target, i_spyId, o_data, i_imageData);
     }
 #endif
 
@@ -1892,7 +1743,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                   const fapi2::variable_buffer& i_data,
                                   fapi2::variable_buffer& o_imageData)
     {
-        return putSpyImageTemplate<>(i_target, i_spyId, i_data, o_imageData);
+        return fapi2plat::putSpyImage<>(i_target, i_spyId, i_data, o_imageData);
     }
 
     fapi2::ReturnCode putSpyImage(const fapi2::Target<fapi2plat::TARGET_TYPE_SCAN_TARGET_14_5, fapi2::plat_target_handle_t>& i_target,
@@ -1900,7 +1751,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                   const fapi2::variable_buffer& i_data,
                                   fapi2::variable_buffer& o_imageData)
     {
-        return putSpyImageTemplate<>(i_target, i_spyId, i_data, o_imageData);
+        return fapi2plat::putSpyImage<>(i_target, i_spyId, i_data, o_imageData);
     }
 
 #ifdef FAPI_2_Z
@@ -1909,7 +1760,7 @@ const fapi2::TargetType TARGET_TYPE_SCOM_TARGET_14_11_NO_Z = fapi2::TARGET_TYPE_
                                   const fapi2::variable_buffer& i_data,
                                   fapi2::variable_buffer& o_imageData)
     {
-        return putSpyImageTemplate<>(i_target, i_spyId, i_data, o_imageData);
+        return fapi2plat::putSpyImage<>(i_target, i_spyId, i_data, o_imageData);
     }
 #endif
 
