@@ -140,10 +140,12 @@ uint32_t ecmdLoadDll(std::string i_dllName) {
     if (tempptr != NULL) {
       loadDllName = tempptr;
     } else {
-#ifdef ECMD_DEFAULT_DLL_FILE
-      // If compiled with the ECMD_DEFAULT_DLL_FILE define, we take that as the dll to use
-      // if not overriden by the ECMD_DLL_FILE variable
-      loadDllName = ECMD_DEFAULT_DLL_FILE;
+#ifdef ECMD_DLL_FILE_FIXED
+      // If compiled with the ECMD_DLL_FILE_FIXED define, we take that as the dll to use
+      // if not overriden by the ECMD_DLL_FILE env variable
+      // This is useful to prevent having to set environment variables in static environments
+      // A sample usage of this variable on a cmdline compile would be: -DECMD_DLL_FILE_FIXED=\"plugin.dll\"
+      loadDllName = ECMD_DLL_FILE_FIXED;
 #else
       // If not compiled with a default, throw an error to the user
       fprintf(stderr,"ecmdLoadDll: Unable to find DLL to load, you must set ECMD_DLL_FILE\n");
