@@ -140,8 +140,15 @@ uint32_t ecmdLoadDll(std::string i_dllName) {
     if (tempptr != NULL) {
       loadDllName = tempptr;
     } else {
+#ifdef ECMD_DEFAULT_DLL_FILE
+      // If compiled with the ECMD_DEFAULT_DLL_FILE define, we take that as the dll to use
+      // if not overriden by the ECMD_DLL_FILE variable
+      loadDllName = ECMD_DEFAULT_DLL_FILE;
+#else
+      // If not compiled with a default, throw an error to the user
       fprintf(stderr,"ecmdLoadDll: Unable to find DLL to load, you must set ECMD_DLL_FILE\n");
       return ECMD_INVALID_DLL_FILENAME;
+#endif
     }
   }
 
