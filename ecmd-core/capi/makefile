@@ -23,6 +23,8 @@ SLIB_SOURCE += ecmdChipTargetCompare.C
 
 ### Generated source by makedll.pl
 GENERATED_INCLUDES := ecmdDllCapi.H ecmdClientEnums.H
+GENERATED_INCLUDES_TO_INSTALL := ecmdDllCapi.H cipDllCapi.H
+GENERATED_INCLUDES := ${GENERATED_INCLUDES_TO_INSTALL} ecmdClientEnums.H
 GENERATED_SOURCE   := ecmdClientCapiFunc.C
 CXXFLAGS           := ${CXXFLAGS} -I${SRCPATH}
 VPATH              := ${VPATH}:${SRCPATH}
@@ -36,6 +38,7 @@ VPATH         := ${VPATH}:sedcScomdef
 CXXFLAGS      := ${CXXFLAGS} -IsedcScomdef
 # Variables for install
 SEDC_INCLUDES_INSTALL := $(addprefix sedcScomdef/, ${SEDC_INCLUDES})
+GENERATED_INCLUDES_INSTALL := $(addprefix ${SRCPATH}/, ${GENERATED_INCLUDES_TO_INSTALL})
 
 # Add on the object output path
 VPATH := ${VPATH}:${OBJPATH}
@@ -85,6 +88,7 @@ install:
 	cp ${OUTLIB}/${TARGET} ${INSTALL_PATH}/${TARGET_ARCH}/lib/.
 	cp ${CAPI_INCLUDES} ${INSTALL_PATH}/capi/.
 	cp ${SEDC_INCLUDES_INSTALL} ${INSTALL_PATH}/capi/.
+	cp ${GENERATED_INCLUDES_INSTALL} ${INSTALL_PATH}/capi/.
 	chmod 644 ${INSTALL_PATH}/capi/*
 	@echo "Installing eCMD Shared Lib to ${INSTALL_PATH}/${TARGET_ARCH}/lib/ ..."
 	cp ${OUTLIB}/${SLIB} ${INSTALL_PATH}/${TARGET_ARCH}/lib/.
