@@ -13,6 +13,8 @@ CXXFLAGS     += -I ${ECMD_ROOT}/ecmd-core/capi -I ${ECMD_ROOT}/ecmd-core/dll -I$
 CXXFLAGS     += -Iadals -Iadals/scom -Iadals/scan -Iadals/sbefifo -Iadals/mbx -Iadals/iic_master
 VPATH        := ${VPATH}:${ECMD_ROOT}/ecmd-core/capi:${ECMD_ROOT}/ecmd-core/dll:${SRCPATH}:adals:adals/scom:adals/scan:adals/sbefifo:adals/mbx:adals/iic_master
 
+TEST_TARGET  := server_tests
+
 # *****************************************************************************
 # Setup all the files going into the build
 # *****************************************************************************
@@ -41,19 +43,20 @@ TGT_INCLUDES += ServerSBEFIFOInstruction.H
 TGT_INCLUDES += SBEFIFOInstruction.H
 TGT_INCLUDES += git_version.H
 
-TGT_SOURCE := Instruction.C
-TGT_SOURCE += InstructionStatus.C
-TGT_SOURCE += ServerFSIInstruction.C
-TGT_SOURCE += FSIInstruction.C
+TESTABLE_TGT_SOURCE := Instruction.C
+TESTABLE_TGT_SOURCE += InstructionStatus.C
+TESTABLE_TGT_SOURCE += InstructionFlag.C
+TESTABLE_TGT_SOURCE += FSIInstruction.C
+TESTABLE_TGT_SOURCE += I2CInstruction.C
+TESTABLE_TGT_SOURCE += GPIOInstruction.C
+TESTABLE_TGT_SOURCE += ecmdDataBuffer.C
+TESTABLE_TGT_SOURCE += ecmdDataBufferBase.C
+TESTABLE_TGT_SOURCE += OutputLite.C
+
+TGT_SOURCE := ServerFSIInstruction.C
 TGT_SOURCE += ServerGPIOInstruction.C
-TGT_SOURCE += GPIOInstruction.C
 TGT_SOURCE += ServerI2CInstruction.C
-TGT_SOURCE += I2CInstruction.C
 TGT_SOURCE += ControlInstruction.C
-TGT_SOURCE += InstructionFlag.C
-TGT_SOURCE += ecmdDataBuffer.C
-TGT_SOURCE += ecmdDataBufferBase.C
-TGT_SOURCE += OutputLite.C
 TGT_SOURCE += PNORInstruction.C
 TGT_SOURCE += fd_impl.C
 TGT_SOURCE += ServerSBEFIFOInstruction.C
@@ -68,6 +71,11 @@ TGT_SOURCE_C += adal_sbefifo.c
 TGT_SOURCE_C += adal_mbx.c
 TGT_SOURCE_C += adal_iic.c
 
+TEST_INCLUDES := TestableFSIInstruction.H
+TEST_INCLUDES += TestableI2CInstruction.H
+TEST_INCLUDES += TestableGPIOInstruction.H
+TEST_SOURCE := server_tests.C
+
 # Combine all the includes into one variable for the build
 INCLUDES      := ${ECMD_INCLUDES} ${TGT_INCLUDES}
 
@@ -81,6 +89,7 @@ LDFLAGS += -ldl -lpthread -lz
 # The run-all rule is defined in makefile.rules
 all:
 	${run-all}
+	${run-all-catch-test}
 
 generate: git_version.C
 
@@ -88,6 +97,9 @@ build: ${TARGET}
 
 test:
   # Do nothing
+
+catch_test: ${TEST_TARGET}
+	${OUTLIB}/${TEST_TARGET}
 
 install:
   # Do nothing
@@ -103,6 +115,14 @@ TGT_SOURCE_C_OBJS  = $(basename ${TGT_SOURCE_C})
 TGT_SOURCE_C_OBJS := $(addprefix ${OBJPATH}, ${TGT_SOURCE_C_OBJS})
 TGT_SOURCE_C_OBJS := $(addsuffix .o, ${TGT_SOURCE_C_OBJS})
 
+TESTABLE_TGT_SOURCE_OBJS  = $(basename ${TESTABLE_TGT_SOURCE})
+TESTABLE_TGT_SOURCE_OBJS := $(addprefix ${OBJPATH}, ${TESTABLE_TGT_SOURCE_OBJS})
+TESTABLE_TGT_SOURCE_OBJS := $(addsuffix .o, ${TESTABLE_TGT_SOURCE_OBJS})
+
+TEST_SOURCE_OBJS  = $(basename ${TEST_SOURCE})
+TEST_SOURCE_OBJS := $(addprefix ${OBJPATH}, ${TEST_SOURCE_OBJS})
+TEST_SOURCE_OBJS := $(addsuffix .o, ${TEST_SOURCE_OBJS})
+
 # *****************************************************************************
 # Compile code for the common C++ objects if their respective
 # code has been changed.  Or, compile everything if a header
@@ -116,6 +136,13 @@ ${TGT_SOURCE_C_OBJS}: ${OBJPATH}%.o : %.c ${INCLUDES}
 	@echo Compiling $<
 	${VERBOSE}${CXX} -c ${CXXFLAGS} $< -o $@ ${DEFINES}
 
+${TESTABLE_TGT_SOURCE_OBJS}: ${OBJPATH}%.o : %.C ${INCLUDES}
+	@echo Compiling $<
+	${VERBOSE}${CXX} -c ${CXXFLAGS} $< -o $@ ${DEFINES}
+
+${TEST_SOURCE_OBJS}: ${OBJPATH}%.o : %.C ${INCLUDES} ${TEST_INCLUDES}
+	@echo Compiling $<
+	${VERBOSE}${CXX} -std=c++11 -c ${CXXFLAGS} -I${CATCHINC} $< -o $@ ${DEFINES}
 # *****************************************************************************
 # Create a .C file containing the git hash to print out as part of the
 # serverversion. If we are building from a .zip download, the .git
@@ -131,9 +158,13 @@ git_version.C: ../../.git/HEAD ../../.git/index
 # *****************************************************************************
 # Create the Target
 # *****************************************************************************
-${TARGET}: ${TGT_SOURCE_OBJS} ${TGT_SOURCE_C_OBJS}
+${TARGET}: ${TESTABLE_TGT_SOURCE_OBJS} ${TGT_SOURCE_OBJS} ${TGT_SOURCE_C_OBJS}
 	@echo Linking $@
 	${VERBOSE}${LD} ${LDFLAGS} -o ${OUTLIB}/${TARGET} $^
+
+${TEST_TARGET}: ${TESTABLE_TGT_SOURCE_OBJS} ${TEST_SOURCE_OBJS}
+	@echo Linking $@
+	${VERBOSE}${LD} -std=c++11 ${LDFLAGS} -o ${OUTLIB}/${TEST_TARGET} $^
 
 # *****************************************************************************
 # Include any global default rules
