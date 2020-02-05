@@ -1189,18 +1189,22 @@ inline uint32_t ecmdFastInsert(uint32_t *i_target, const uint32_t * i_data, uint
 
 
 uint32_t ecmdDataBufferBase::insert(const ecmdDataBufferBase &i_bufferIn, uint32_t i_targetStart, uint32_t i_len, uint32_t i_sourceStart) {
+    return insertBase(i_bufferIn, i_targetStart, i_len, i_sourceStart);
+}
+
+uint32_t ecmdDataBufferBase::insertBase(const ecmdDataBufferBase &i_bufferIn, uint32_t i_targetStart, uint32_t i_len, uint32_t i_sourceStart) {
   uint32_t rc = ECMD_DBUF_SUCCESS;    
 
   if (i_targetStart+i_len > iv_NumBits) {
-    ETRAC3("**** ERROR : ecmdDataBufferBase::insert: i_targetStart %d + i_len %d > iv_NumBits (%d)",
+    ETRAC3("**** ERROR : ecmdDataBufferBase::insertBase: i_targetStart %d + i_len %d > iv_NumBits (%d)",
            i_targetStart, i_len, iv_NumBits);
     RETURN_ERROR(ECMD_DBUF_BUFFER_OVERFLOW);
   } else if (i_targetStart >= iv_NumBits) {
-    ETRAC2("**** ERROR : ecmdDataBufferBase::insert: i_targetStart %d >= iv_NumBits (%d)",
+    ETRAC2("**** ERROR : ecmdDataBufferBase::insertBase: i_targetStart %d >= iv_NumBits (%d)",
            i_targetStart, iv_NumBits);
     RETURN_ERROR(ECMD_DBUF_BUFFER_OVERFLOW);
   } else if (i_len > iv_NumBits) {
-    ETRAC2("**** ERROR : ecmdDataBufferBase::insert: i_len %d > iv_NumBits (%d)",
+    ETRAC2("**** ERROR : ecmdDataBufferBase::insertBase: i_len %d > iv_NumBits (%d)",
            i_len, iv_NumBits);
     RETURN_ERROR(ECMD_DBUF_BUFFER_OVERFLOW);
   }
@@ -1497,17 +1501,21 @@ uint32_t ecmdDataBufferBase::insertFromRight(uint8_t i_data, uint32_t i_start, u
 }
 
 uint32_t ecmdDataBufferBase::extract(ecmdDataBufferBase& o_bufferOut, uint32_t i_start, uint32_t i_len) const {
+    return extractBase(o_bufferOut, i_start, i_len);
+}
+
+uint32_t ecmdDataBufferBase::extractBase(ecmdDataBufferBase& o_bufferOut, uint32_t i_start, uint32_t i_len) const {
   uint32_t rc = ECMD_DBUF_SUCCESS;
 
   // ecmdExtract can't make good input checks, so we have to do that here
   if (i_start + i_len > iv_NumBits) {
-    ETRAC3("**** ERROR : ecmdDataBufferBase::extract: start %d + len %d > iv_NumBits (%d)\n", i_start, i_len, iv_NumBits);
+    ETRAC3("**** ERROR : ecmdDataBufferBase::extractBase: start %d + len %d > iv_NumBits (%d)\n", i_start, i_len, iv_NumBits);
     RETURN_ERROR(ECMD_DBUF_BUFFER_OVERFLOW);
   } else if (i_start >= iv_NumBits) {
-    ETRAC2("**** ERROR : ecmdDataBufferBase::extract: start %d >= iv_NumBits (%d)\n", i_start, iv_NumBits);
+    ETRAC2("**** ERROR : ecmdDataBufferBase::extractBase: start %d >= iv_NumBits (%d)\n", i_start, iv_NumBits);
     RETURN_ERROR(ECMD_DBUF_BUFFER_OVERFLOW);
   } else if (i_len > iv_NumBits) {
-    ETRAC2("**** ERROR : ecmdDataBufferBase::extract: len %d > iv_NumBits (%d)\n", i_len, iv_NumBits);
+    ETRAC2("**** ERROR : ecmdDataBufferBase::extractBase: len %d > iv_NumBits (%d)\n", i_len, iv_NumBits);
     RETURN_ERROR(ECMD_DBUF_BUFFER_OVERFLOW);
   }
 

@@ -708,9 +708,13 @@ inline uint32_t ecmdFastInsert(uint32_t *i_target, const uint32_t * i_data, uint
 
 
 uint32_t ecmdDataBuffer::insert(const ecmdDataBuffer &i_bufferIn, uint32_t i_targetStart, uint32_t i_len, uint32_t i_sourceStart) {
+    return insertBase(i_bufferIn, i_targetStart, i_len, i_sourceStart);
+}
+
+uint32_t ecmdDataBuffer::insertBase(const ecmdDataBufferBase &i_bufferIn, uint32_t i_targetStart, uint32_t i_len, uint32_t i_sourceStart) {
   uint32_t rc = ECMD_DBUF_SUCCESS;    
 
-  rc = ecmdDataBufferBase::insert(i_bufferIn, i_targetStart, i_len, i_sourceStart);
+  rc = ecmdDataBufferBase::insertBase(i_bufferIn, i_targetStart, i_len, i_sourceStart);
   if (rc) return rc;
 
 #ifndef REMOVE_SIM   
@@ -718,12 +722,12 @@ uint32_t ecmdDataBuffer::insert(const ecmdDataBuffer &i_bufferIn, uint32_t i_tar
   if (i_bufferIn.iv_XstateEnabled) {
     enableXstateBuffer();
     if (i_targetStart+i_len <= iv_NumBits) {
-      strncpy(&(iv_DataStr[i_targetStart]), (i_bufferIn.genXstateStr(i_sourceStart, i_len)).c_str(), i_len);
+      strncpy(&(iv_DataStr[i_targetStart]), (static_cast<const ecmdDataBuffer &>(i_bufferIn).genXstateStr(i_sourceStart, i_len)).c_str(), i_len);
     }
   } else if (iv_XstateEnabled) {
     // We have xstates, but the incoming buffer didn't, just grab the binary data 
     if (i_targetStart+i_len <= iv_NumBits) {
-      strncpy(&(iv_DataStr[i_targetStart]), (i_bufferIn.genBinStr(i_sourceStart, i_len)).c_str(), i_len);
+      strncpy(&(iv_DataStr[i_targetStart]), (static_cast<const ecmdDataBuffer &>(i_bufferIn).genBinStr(i_sourceStart, i_len)).c_str(), i_len);
     }
   }      
 #endif  
@@ -753,15 +757,19 @@ uint32_t ecmdDataBuffer::insert(const uint32_t * i_data, uint32_t i_targetStart,
 }
 
 uint32_t ecmdDataBuffer::extract(ecmdDataBuffer& o_bufferOut, uint32_t i_start, uint32_t i_len) const {
+    return extractBase(o_bufferOut, i_start, i_len);
+}
+
+uint32_t ecmdDataBuffer::extractBase(ecmdDataBufferBase& o_bufferOut, uint32_t i_start, uint32_t i_len) const {
   uint32_t rc = ECMD_DBUF_SUCCESS;
 
-  rc = ecmdDataBufferBase::extract(o_bufferOut, i_start, i_len);
+  rc = ecmdDataBufferBase::extractBase(o_bufferOut, i_start, i_len);
   if (rc) return rc;   
 
 #ifndef REMOVE_SIM
   /* We have xstates, force the output buffer to have them as well */
   if (iv_XstateEnabled) {
-    o_bufferOut.enableXstateBuffer();
+    static_cast<ecmdDataBuffer &>(o_bufferOut).enableXstateBuffer();
     if (i_start+i_len <= iv_NumBits) {
       strncpy(o_bufferOut.iv_DataStr, (genXstateStr(i_start, i_len)).c_str(), i_len);
       o_bufferOut.iv_DataStr[i_len] = '\0';

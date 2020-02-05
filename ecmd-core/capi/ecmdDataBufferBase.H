@@ -327,7 +327,7 @@ public:
    *
    * NOTE : Capacity will be adjusted to fit new size if neccesary
    */
-  uint32_t growBitLength(uint32_t i_newNumBits);
+  virtual uint32_t growBitLength(uint32_t i_newNumBits);
 
   /**
    * @brief Returns value of iv_BufferOptimizable
@@ -630,6 +630,22 @@ public:
    */
   virtual uint32_t insert(const ecmdDataBufferBase & i_bufferIn, uint32_t i_targetStart, uint32_t i_len, uint32_t i_sourceStart = 0);
 
+protected:
+  /**
+   * @brief Copy part of another DataBuffer into this one
+   * @param i_bufferIn DataBuffer to copy data from - data is taken left aligned
+   * @param i_targetStart Start bit to insert to
+   * @param i_len Length of bits to insert
+   * @param i_sourceStart Start bit in i_bufferIn - default value is zero
+   * @pre DataBuffer must be pre-allocated
+   * @post Data is copied from i_bufferIn to this DataBuffer in specified location
+   * @retval ECMD_DBUF_SUCCESS on success
+   * @retval ECMD_DBUF_BUFFER_OVERFLOW operation requested out of range
+   */
+  virtual uint32_t insertBase(const ecmdDataBufferBase & i_bufferIn, uint32_t i_targetStart, uint32_t i_len, uint32_t i_sourceStart = 0);
+
+public:
+
 #if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   /**
    * @brief Copy part of a uint32_t array into this DataBuffer
@@ -812,6 +828,22 @@ public:
    * NOTE : The o_bufferOut buffer is resized to the extract length and any data in the buffer is lost
    */
   uint32_t extract(ecmdDataBufferBase & o_bufferOut, uint32_t i_start, uint32_t i_len) const;
+
+protected:
+  /**
+   * @brief Copy data from this DataBuffer into another
+   * @param o_bufferOut DataBuffer to copy into - data is placed left aligned
+   * @param i_start Start bit of data in this DataBuffer to copy
+   * @param i_len Length of consecutive bits to copy
+   * @post Data is copied from specified location in this DataBuffer to bufferOut
+   * @retval ECMD_DBUF_SUCCESS on success
+   * @retval ECMD_DBUF_BUFFER_OVERFLOW operation requested out of range
+
+   * NOTE : The o_bufferOut buffer is resized to the extract length and any data in the buffer is lost
+   */
+  virtual uint32_t extractBase(ecmdDataBufferBase & o_bufferOut, uint32_t i_start, uint32_t i_len) const;
+
+public:
 
 #ifndef ECMD_PERLAPI
   /**
