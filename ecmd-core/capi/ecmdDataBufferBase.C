@@ -387,12 +387,16 @@ uint32_t ecmdDataBufferBase::shrinkBitLength(uint32_t i_newNumBits) {
 }
 
 uint32_t ecmdDataBufferBase::growBitLength(uint32_t i_newNumBits) {
+    return growBitLengthInternal(i_newNumBits);
+}
+
+uint32_t ecmdDataBufferBase::growBitLengthInternal(uint32_t i_newNumBits) {
   uint32_t rc = ECMD_DBUF_SUCCESS;
   uint32_t prevwordsize;
   uint32_t prevbitsize;
 
   if(!iv_UserOwned) {
-    ETRAC0("**** ERROR (ecmdDataBufferBase::growBitLength) : Attempt to modify non user owned buffer size.");
+    ETRAC0("**** ERROR (ecmdDataBufferBase::growBitLengthInternal) : Attempt to modify non user owned buffer size.");
     RETURN_ERROR(ECMD_DBUF_NOT_OWNER);
   }
 
@@ -401,7 +405,7 @@ uint32_t ecmdDataBufferBase::growBitLength(uint32_t i_newNumBits) {
     return rc;
   } else if (i_newNumBits < iv_NumBits) {
     /* You can't grow smaller, use shrink */
-    ETRAC0("**** ERROR (ecmdDataBufferBase::growBitLength) : Attempted to grow to a smaller size than current buffer size.");
+    ETRAC0("**** ERROR (ecmdDataBufferBase::growBitLengthInternal) : Attempted to grow to a smaller size than current buffer size.");
     RETURN_ERROR(ECMD_DBUF_INVALID_ARGS);
   }
 
@@ -414,7 +418,7 @@ uint32_t ecmdDataBufferBase::growBitLength(uint32_t i_newNumBits) {
     /* UhOh we are out of room, have to resize */
     uint32_t * tempBuf = new uint32_t[prevwordsize];
     if (tempBuf == NULL) {
-      ETRAC0("**** ERROR : ecmdDataBufferBase::growBitLength : Unable to allocate temp buffer");
+      ETRAC0("**** ERROR : ecmdDataBufferBase::growBitLengthInternal : Unable to allocate temp buffer");
       RETURN_ERROR(ECMD_DBUF_INIT_FAIL);
     }
     memcpy(tempBuf, iv_Data, prevwordsize * 4);

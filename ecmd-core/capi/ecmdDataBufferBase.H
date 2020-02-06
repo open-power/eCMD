@@ -327,7 +327,20 @@ public:
    *
    * NOTE : Capacity will be adjusted to fit new size if neccesary
    */
-  virtual uint32_t growBitLength(uint32_t i_newNumBits);
+  uint32_t growBitLength(uint32_t i_newNumBits);
+
+protected:
+  /**
+   * @brief Implementation of growBitLength()
+   * @param i_newNumBits New bit length for buffer
+   * @retval ECMD_DBUF_SUCCESS on success
+   * @post Internal buffer size is reset but data inside is not lost
+   *
+   * NOTE : Capacity will be adjusted to fit new size if neccesary
+   */
+  virtual uint32_t growBitLengthInternal(uint32_t i_newNumBits);
+
+public:
 
   /**
    * @brief Returns value of iv_BufferOptimizable

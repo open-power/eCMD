@@ -275,6 +275,20 @@ public:
    * NOTE : Capacity will be adjusted to fit new size if neccesary
    */
   uint32_t growBitLength(uint32_t i_newNumBits);
+
+protected:
+  /**
+   * @brief Implementation of growBitLength()
+   * @param i_newNumBits New bit length for buffer
+   * @retval ECMD_DBUF_SUCCESS on success
+   * @post Internal buffer size is reset but data inside is not lost
+   *
+   * NOTE : Capacity will be adjusted to fit new size if neccesary
+   */
+  virtual uint32_t growBitLengthInternal(uint32_t i_newNumBits);
+
+public:
+
   //@}
 
   /** @name Bit/Word Manipulation Functions */
@@ -1273,6 +1287,18 @@ public:
    */
   std::string genBinStr(uint32_t i_start, uint32_t i_bitlen) const; 
 
+protected:
+  /**
+   * @brief Return Data as a binary char string
+   * @param i_bufferIn Buffer to generate from
+   * @param i_start Start bit of data to convert
+   * @param i_bitlen Number of consecutive bits to convert
+   * @retval String containing requested data
+   */
+  static std::string genBinStr(const ecmdDataBufferBase & i_bufferIn, uint32_t i_start, uint32_t i_bitlen); 
+
+public:
+
   /**
    * @brief Return Data as an ASCII char string.  If it's out of range, a . is printed.
    * @param i_start Start bit of data to convert
@@ -1323,6 +1349,18 @@ public:
    * @retval String containing requested data
    */
   std::string genXstateStr(uint32_t i_start, uint32_t i_bitlen) const;
+
+protected:
+  /**
+   * @brief Retrieve a section of the Xstate Data
+   * @param i_bufferIn Buffer to generate from
+   * @param i_start Start bit of data to retrieve
+   * @param i_bitlen Number of consecutive bits to retrieve
+   * @retval String containing requested data
+   */
+  static std::string genXstateStr(const ecmdDataBufferBase & i_bufferIn, uint32_t i_start, uint32_t i_bitlen);
+
+public:
 
   /**
    * @brief Retrieve entire Xstate Data buffer
@@ -1442,6 +1480,20 @@ public:
    */
   uint32_t enableXstateBuffer();
 
+protected:
+
+  /**
+   * @brief Initializes the X-state buffer, from then on all changes are reflected in Xstate
+   * @param io_buffer Buffer to modify
+   * @post Xstate buffer is created and initialized to value of current raw buffer
+   * @retval ECMD_DBUF_SUCCESS on success
+   * @retval ECMD_DBUF_INIT_FAIL failure occurred allocating X-state array
+   * @retval ECMD_DBUF_NOT_OWNER when called on buffer not owned
+   */
+  static uint32_t enableXstateBuffer(ecmdDataBufferBase & io_buffer);
+
+public:
+
   /**
    * @brief Removes the X-state buffer, from then on no changes are made to Xstate
    * @post Xstate buffer is deallocated
@@ -1476,6 +1528,12 @@ public:
    * @retval true if xstate found false if none
    */
   bool   hasXstate(uint32_t i_start, uint32_t i_length) const; /* check subset */
+
+protected:
+
+  static bool   hasXstate(const ecmdDataBufferBase & i_bufferIn, uint32_t i_start, uint32_t i_length);
+
+public:
 
   /**
    * @brief Retrieve an Xstate value from the buffer
