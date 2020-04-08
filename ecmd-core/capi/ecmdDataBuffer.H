@@ -1530,7 +1530,13 @@ public:
   bool   hasXstate(uint32_t i_start, uint32_t i_length) const; /* check subset */
 
 protected:
-
+  /**
+   * @brief Check section of buffer for any X-state values
+   * @param i_bufferIn Buffer to check
+   * @param i_start Start bit to test
+   * @param i_length Number of consecutive bits to test
+   * @retval true if xstate found false if none
+   */
   static bool   hasXstate(const ecmdDataBufferBase & i_bufferIn, uint32_t i_start, uint32_t i_length);
 
 public:
