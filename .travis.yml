@@ -1,0 +1,13 @@
+language: cpp
+os: linux
+dist: bionic
+
+addons:
+  apt:
+    packages:
+    - swig
+
+script:
+  - ./config.py
+  - make
+  - ./config.py --extensions "cmd cip" && cd dllNetwork/server && make
