@@ -60,7 +60,7 @@ uint32_t ServerSPIInstruction::spi_open(Handle ** handle, InstructionStatus & o_
         o_status.errorMessage.append(errstr);
     }
 
-    if ( *handle == NULL || (*handle != NULL && (int32_t)*handle < 0) ) {
+    if ( *handle == NULL || (*handle != NULL && (long)*handle < 0) ) {
         snprintf(errstr, 200, "ServerSPIInstruction::spi_open Problem opening SPI device %s : errno %d\n", device, errno);
         o_status.errorMessage.append(errstr);
         rc = o_status.rc = SERVER_SPI_OPEN_FAIL;
@@ -88,7 +88,7 @@ uint32_t ServerSPIInstruction::spi_close(Handle * handle)
 #ifdef TESTING
     TEST_PRINT("close()\n");
 #else
-    close((int) handle);
+    close((long) handle);
 #endif
     return rc;
 }
@@ -98,7 +98,7 @@ ssize_t ServerSPIInstruction::spi_command(Handle * i_handle, ecmdDataBufferBase 
     ssize_t rc = 0;
     char errstr[200];
 
-    int fd = (int) i_handle;
+    int fd = (long) i_handle;
     uint32_t readBytes = readLength % 8 ? (readLength / 8) + 1 : readLength / 8;
     uint8_t *l_buf = NULL;
 
