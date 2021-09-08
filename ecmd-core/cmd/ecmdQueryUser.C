@@ -1392,7 +1392,7 @@ uint32_t ecmdQueryUser(int argc, char* argv[]) {
               // Step 2 - print the data
               // The only change in this whole block to fix the issue is ~4 lines down with the
               // !ecmdCurChipUnit->threadData.empty() to properly close out a no thread/thread switch
-              ecmdPrevChipUnit = *ecmdBeginChipUnit;
+              ecmdPrevChipUnit.chipUnitType = "";  // Init to empty value so first check miscompares properly
               for (ecmdCurChipUnit = ecmdBeginChipUnit; ecmdCurChipUnit != ecmdEndChipUnit; ecmdCurChipUnit++) {
                 if (!easyParse) {
                   if (ecmdPrevChipUnit.chipUnitType != ecmdCurChipUnit->chipUnitType || (curDepth > DEPTH_CUTYPE) || !ecmdCurChipUnit->threadData.empty()) {
