@@ -1232,7 +1232,8 @@ uint32_t ecmdQueryUser(int argc, char* argv[]) {
     uint8_t DEPTH_CUTYPE = 3;
     uint8_t DEPTH_THREAD = 4;
     uint8_t curDepth = DEPTH_NONE;
-    std::string prevChip, prevChipUnit;
+    std::string prevChip;
+    ecmdChipUnitData ecmdPrevChipUnit;
 
     for (ecmdCurCage = queryData.cageData.begin(); ecmdCurCage != queryData.cageData.end(); ecmdCurCage ++) {
       if (!easyParse) {
@@ -1347,70 +1348,70 @@ uint32_t ecmdQueryUser(int argc, char* argv[]) {
                 curDepth = DEPTH_POS;
               }
 
-              prevChipUnit = "jta"; // Can't be initialized to "" because that is valid for P6/Z6, use my initials
-              for (ecmdCurChipUnit = ecmdBeginChipUnit; ecmdCurChipUnit != ecmdEndChipUnit; ecmdCurChipUnit++) {
+              // To properly display the core/thread data this has to be done in 2 steps
+              // 1) Gather all the thread data.  This is for -dall, in -dt we would have it
+              // 2) Format and print data
+              // This is due to a logic problem in doAll where it was printing core info and had no thread info
+              // That led to a printing bug when you go from cores without threads to cores with threads
+              // Wrong output: c[2,3,4]->t[0,1,2,3]
+              // Right output: c[2,3]
+              //               c[4]->t[0,1,2,3]
 
+              // Step 1 - find our doAll threads
+              for (ecmdCurChipUnit = ecmdBeginChipUnit; ecmdCurChipUnit != ecmdEndChipUnit; ecmdCurChipUnit++) {
+                /* In doAll mode, we are attempting to tunnel all the way down so we need to re-run the query at the thread level to see if we have threads */
+                if (doAll) {
+                  target.cage = ecmdCurCage->cageId;
+                  target.cageState = ECMD_TARGET_FIELD_VALID;
+                  target.node = ecmdCurNode->nodeId;
+                  target.nodeState = ECMD_TARGET_FIELD_VALID;
+                  target.slot = ecmdCurSlot->slotId;
+                  target.slotState = ECMD_TARGET_FIELD_VALID;
+                  target.chipType = ecmdCurChip->chipType;
+                  target.chipTypeState = ECMD_TARGET_FIELD_VALID;
+                  target.pos = ecmdCurChip->pos;
+                  target.posState = ECMD_TARGET_FIELD_VALID;
+                  if (ecmdCurChipUnit->chipUnitType != "") {
+                    target.chipUnitType = ecmdCurChipUnit->chipUnitType;
+                    target.chipUnitTypeState = ECMD_TARGET_FIELD_VALID;
+                  } else {
+                    target.chipUnitTypeState = ECMD_TARGET_FIELD_UNUSED;
+                  }
+                  target.chipUnitNum = ecmdCurChipUnit->chipUnitNum;
+                  target.chipUnitNumState = ECMD_TARGET_FIELD_VALID;
+                  target.threadState = ECMD_TARGET_FIELD_WILDCARD;
+
+                  rc = ecmdQueryConfigSelected(target, threadQueryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
+                  /* If we found threads, load them into the ecmdCurChipUnit for the next loop */
+                  if (!threadQueryData.cageData.empty()) {
+                    ecmdCurChipUnit->threadData = threadQueryData.cageData.begin()->nodeData.begin()->slotData.begin()->chipData.begin()->chipUnitData.begin()->threadData;
+                  }
+                }
+              } /* curChipUnitIter */
+
+              // Step 2 - print the data
+              // The only change in this whole block to fix the issue is ~4 lines down with the
+              // !ecmdCurChipUnit->threadData.empty() to properly close out a no thread/thread switch
+              ecmdPrevChipUnit.chipUnitType = "";  // Init to empty value so first check miscompares properly
+              for (ecmdCurChipUnit = ecmdBeginChipUnit; ecmdCurChipUnit != ecmdEndChipUnit; ecmdCurChipUnit++) {
                 if (!easyParse) {
-                  if (prevChipUnit != ecmdCurChipUnit->chipUnitType || (curDepth > DEPTH_CUTYPE)) {
+                  if (ecmdPrevChipUnit.chipUnitType != ecmdCurChipUnit->chipUnitType || (curDepth > DEPTH_CUTYPE) || !ecmdCurChipUnit->threadData.empty()) {
                     // Pull off a comma out there and then close it up
                     cbuf.erase((cbuf.length() - 1), 1);
                     cbuf += "]\n";
-                    prevChipUnit = ecmdCurChipUnit->chipUnitType;
                     sprintf(buf,"          %s[",((ecmdCurChipUnit->chipUnitType == "") ? "c" : ecmdCurChipUnit->chipUnitType.c_str()));
                     cbuf += buf;
                     curDepth = DEPTH_CUTYPE;
                   }
                 }
 
-                if (doAll || !ecmdCurChipUnit->threadData.empty()) {
-                  /* In doAll mode, we are attempting to tunnel all the way down so we need to re-run the query at the thread level to see if we have threads */
-                  if (doAll) {
-                    target.cage = ecmdCurCage->cageId;
-                    target.cageState = ECMD_TARGET_FIELD_VALID;
-                    target.node = ecmdCurNode->nodeId;
-                    target.nodeState = ECMD_TARGET_FIELD_VALID;
-                    target.slot = ecmdCurSlot->slotId;
-                    target.slotState = ECMD_TARGET_FIELD_VALID;
-                    target.chipType = ecmdCurChip->chipType;
-                    target.chipTypeState = ECMD_TARGET_FIELD_VALID;
-                    target.pos = ecmdCurChip->pos;
-                    target.posState = ECMD_TARGET_FIELD_VALID;
-                    if (ecmdCurChipUnit->chipUnitType != "") {
-                      target.chipUnitType = ecmdCurChipUnit->chipUnitType;
-                      target.chipUnitTypeState = ECMD_TARGET_FIELD_VALID;
-                    } else {
-                      target.chipUnitTypeState = ECMD_TARGET_FIELD_UNUSED;
-                    }
-                    target.chipUnitNum = ecmdCurChipUnit->chipUnitNum;
-                    target.chipUnitNumState = ECMD_TARGET_FIELD_VALID;
-                    target.threadState = ECMD_TARGET_FIELD_WILDCARD;
+                // Done with the need for prev, update it
+                ecmdPrevChipUnit = *ecmdCurChipUnit;
 
-                    rc = ecmdQueryConfigSelected(target, threadQueryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
-                    /* If it's empty list, we don't have threads and need to return back */
-                    if (threadQueryData.cageData.empty()) {
-                      /* For non-threaded chips */
-                      if (!easyParse) {
-                        sprintf(buf, "%d,", ecmdCurChipUnit->chipUnitNum);
-                        cbuf += buf;
-                      } else {
-                        /* We need to figure out if we should add on a chipUnit */
-                        std::string fullChipType = ecmdCurChip->chipType.c_str();
-                        if (ecmdCurChipUnit->chipUnitType != "") {
-                          fullChipType += "." + ecmdCurChipUnit->chipUnitType;
-                        }
-                        sprintf(buf,"%-15s -p%02d -c%d\n", fullChipType.c_str(), ecmdCurChip->pos, ecmdCurChipUnit->chipUnitNum);
-                        printed = sbuf + buf;
-                        ecmdOutput(printed.c_str());
-                      }
-                      continue;
-                    } else {
-                      ecmdBeginThread = threadQueryData.cageData.begin()->nodeData.begin()->slotData.begin()->chipData.begin()->chipUnitData.begin()->threadData.begin();
-                      ecmdEndThread = threadQueryData.cageData.begin()->nodeData.begin()->slotData.begin()->chipData.begin()->chipUnitData.begin()->threadData.end();
-                    }
-                  } else {
-                    ecmdBeginThread = ecmdCurChipUnit->threadData.begin();
-                    ecmdEndThread = ecmdCurChipUnit->threadData.end();
-                  }
+                if (!ecmdCurChipUnit->threadData.empty()) {
+                  // Get the start and end threads
+                  ecmdBeginThread = ecmdCurChipUnit->threadData.begin();
+                  ecmdEndThread = ecmdCurChipUnit->threadData.end();
 
                   if (!easyParse && (ecmdBeginThread != ecmdEndThread)) {
                     sprintf(buf,"%d]->t[", ecmdCurChipUnit->chipUnitNum);
