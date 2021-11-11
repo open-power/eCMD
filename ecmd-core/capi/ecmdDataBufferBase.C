@@ -147,6 +147,14 @@ uint32_t fast_reverse32(uint32_t data) {
     fast_reverse8(data & 0x000000FF) << 24;
 }
 
+inline /* leave this inlined */
+uint32_t fast_reverse_bytes(uint32_t data) {
+    return (data & 0xFF000000) >> 24 |
+    (data & 0x00FF0000) >> 8 |
+    (data & 0x0000FF00) << 8 |
+    (data & 0x000000FF) << 24;
+}
+
 //---------------------------------------------------------------------
 //  Constructors
 //---------------------------------------------------------------------
@@ -1082,6 +1090,62 @@ uint32_t ecmdDataBufferBase::reverse() {
   // if odd number of words, reverse middle word; if only 1 word, reverse this word
   if (l_words&1){
     iv_Data[l_words/2 ] = fast_reverse32(iv_Data[l_words/2]);
+  }
+
+  // now account for slop
+  if (l_slop != 0){
+
+    for (uint32_t i=0;i<l_words;i++){ // loop through all words
+
+      if ((l_words>1)&&(i!=(l_words-1))){ // deal with most words here                
+        uint32_t mask = 0xffffffff >> (32-l_slop);
+        uint32_t tmp1 = (iv_Data[i]& mask)<< (32-l_slop);
+
+        mask =~mask;
+        uint32_t tmp2 = (iv_Data[i+1] & mask)>>l_slop;
+
+        tmp1 |=tmp2;
+        iv_Data[i]=tmp1;
+
+      } else { //dealing with the last word separately; Also, handle if there is only one word here
+        uint32_t mask = 0xffffffff >> (32-l_slop);
+        iv_Data[l_words-1] = (iv_Data[l_words-1]& mask) <<(32-l_slop); 
+      }
+    } // end of for loop through all words
+  } // end of slop check
+
+  return rc;
+}
+
+
+// This is really the same code that reverse() uses above, except it's calling fast_reverse_bytes() instead of fast_reverse32()
+// It also has an added check for byte alignment.
+uint32_t ecmdDataBufferBase::byteReverse() {
+  uint32_t rc = ECMD_DBUF_SUCCESS;
+  uint32_t l_words=0;
+  uint32_t l_slop =  (iv_NumBits % UNIT_SZ);
+
+  if (iv_NumBits % 8)
+  {
+      ETRAC("Buffer must be byte aligned to use byteReverse()");
+      RETURN_ERROR(ECMD_DBUF_INVALID_ARGS);
+  }
+
+  if (l_slop)
+    l_words = iv_NumBits/32+1;
+  else
+    l_words = iv_NumBits/32;
+
+  // reverse words
+  for (uint32_t i=0;i< l_words/2;i++){
+    uint32_t l_tmp = fast_reverse_bytes(iv_Data[l_words-1-i]); 
+    iv_Data[l_words-1-i] = fast_reverse_bytes(iv_Data[i]);
+    iv_Data[i] = l_tmp;
+  }
+
+  // if odd number of words, reverse middle word; if only 1 word, reverse this word
+  if (l_words&1){
+    iv_Data[l_words/2 ] = fast_reverse_bytes(iv_Data[l_words/2]);
   }
 
   // now account for slop
