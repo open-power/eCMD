@@ -611,6 +611,13 @@ public:
    */
   uint32_t reverse();
 
+  /**
+   * @brief Byte reverse entire buffer - buffer must be byte-aligned
+   * @retval ECMD_DBUF_SUCCESS on success
+   * @retval ECMD_DBUF_INVALID_ARGS if buffer is not byte-aligned
+   */
+  uint32_t byteReverse();
+
 #if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   /**
    * @brief Apply an inversion mask to data inside buffer

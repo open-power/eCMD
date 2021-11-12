@@ -621,6 +621,22 @@ uint32_t ecmdDataBuffer::reverse() {
   return rc;
 }
 
+uint32_t ecmdDataBuffer::byteReverse() {
+  uint32_t rc = ECMD_DBUF_SUCCESS;
+
+  rc = ecmdDataBufferBase::byteReverse();
+  if(rc) return rc;
+
+#ifndef REMOVE_SIM   
+  if (iv_XstateEnabled) {
+    /* We have xstates, re-generate the binary data */
+    strncpy(&(iv_DataStr[0]), (this->genBinStr()).c_str(), iv_NumBits);
+  }
+#endif
+
+  return rc;
+}
+
 uint32_t ecmdDataBuffer::applyInversionMask(const ecmdDataBuffer & i_invMaskBuffer, uint32_t i_invByteLen) {
   return applyInversionMask(i_invMaskBuffer.iv_Data, (i_invMaskBuffer.getByteLength() < i_invByteLen) ? i_invMaskBuffer.getByteLength() : i_invByteLen);
 }
