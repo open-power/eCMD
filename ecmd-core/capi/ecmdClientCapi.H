@@ -4287,6 +4287,23 @@ uint32_t spiWrite(const ecmdChipTarget & i_target, uint32_t i_engine, uint32_t i
 #endif /* ifndef ECMD_REMOVE_SPI_FUNCTIONS (this comment has to be here for makedll.pl to work */
 //@}
 
+/** @name Configuration Functions */
+//@{
+/**
+ @brief Set the value of a supported Configuration Setting like for example scanmode
+ @param i_target Struct that specifies the target to operate on (see target depth and states below)
+ @param i_name Name of setting as defined by eCMD Api
+ @param i_configData Structure containing the valid data
+ @retval ECMD_INVALID_CONFIG_NAME Name specified is not valid
+ @retval ECMD_TARGET_NOT_CONFIGURED if target is not available in the system
+ @retval ECMD_SUCCESS if successful
+
+ TARGET DEPTH  : cage, node, slot, pos, chipUnit, thread (depending on i_name)<br>
+ TARGET STATES : Unused<br>
+*/
+uint32_t ecmdSetConfigurationComplexHidden(const ecmdChipTarget & i_target, std::string i_name, ecmdConfigData i_configData, uint32_t i_mode = ECMD_SETCONFIG_MODE_REPLACE);
+//@}
+
 #ifndef DOCUMENTATION
 }  //extern "C"
 #endif

@@ -2204,6 +2204,13 @@ inline ecmdPnorListData::~ecmdPnorListData()
 #endif
 
 /* 
+ * Defines for ecmdSetConfigurationComplexHidden mode
+ */
+#define ECMD_SETCONFIG_MODE_REPLACE 0x00000000
+#define ECMD_SETCONFIG_MODE_ADD     0x00000001
+#define ECMD_SETCONFIG_MODE_REMOVE  0x00000002
+
+/* 
  * Defines for getsram mode
  */
 #define ECMD_SRAM_MODE_CHANNEL_MASK     0x0000000F
