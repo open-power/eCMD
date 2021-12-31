@@ -4294,9 +4294,14 @@ uint32_t spiWrite(const ecmdChipTarget & i_target, uint32_t i_engine, uint32_t i
  @param i_target Struct that specifies the target to operate on (see target depth and states below)
  @param i_name Name of setting as defined by eCMD Api
  @param i_configData Structure containing the valid data
+ @param i_mode Bit-field using ECMD_SETCONFIG_MODE* defines (see ecmdStructs.H) 
  @retval ECMD_INVALID_CONFIG_NAME Name specified is not valid
  @retval ECMD_TARGET_NOT_CONFIGURED if target is not available in the system
  @retval ECMD_SUCCESS if successful
+
+ NOTE : i_mode is either ECMD_SETCONFIG_MODE_REPLACE, ECMD_SETCONFIG_MODE_ADD, or ECMD_SETCONFIG_MODE_REMOVE <br>
+ NOTE : i_mode value will determine whether to add or remove the value in  i_configData from the config setting, <br> 
+ NOTE : or replace the config setting entirely with the new value specified in i_configData <br>
 
  TARGET DEPTH  : cage, node, slot, pos, chipUnit, thread (depending on i_name)<br>
  TARGET STATES : Unused<br>

@@ -1,5 +1,5 @@
 
-Syntax: setconfig [<Chip[.ChipUnit]>] <ConfigName> <Value> [-i<format>] [-dk | -dn | -ds | -dp | -dc]
+Syntax: setconfig [<Chip[.ChipUnit]>] <ConfigName> [Mode] <Value> [-i<format>] [-dk | -dn | -ds | -dp | -dc]
         [-quiet] [-quieterror] [-exist] [-coe] [-a#] [-k#] [-n#] [-s#] [-p#] [-c#]
 
         ECMD:           Core Common Function
@@ -14,6 +14,11 @@ Syntax: setconfig [<Chip[.ChipUnit]>] <ConfigName> <Value> [-i<format>] [-dk | -
                         with ChipUnit: pu.mc
 
         ConfigName      Name of configuration variable to write
+	
+	Mode [opt]	To be used only with configuration variables that support multiple values. 
+	     		Mode can either be "add" or "remove" to add or remove the specified value 
+			from the configuration variable. If Mode is not specified, Value will 
+			replace the current value of the configuration variable.
 
         Value           Value to set configuration variable to
 
@@ -38,3 +43,4 @@ Syntax: setconfig [<Chip[.ChipUnit]>] <ConfigName> <Value> [-i<format>] [-dk | -
 
         Examples:       > setconfig SIM_BROADSIDE_MODE scan -dk
                         > setconfig pu PLL_TUNE 3 -id -dp
+			> setconfig USE_SBE_FIFO add scom
