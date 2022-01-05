@@ -81,6 +81,10 @@ namespace fapi2plat
                               const fapi2::RingMode i_ringMode);
 
     fapi2::ReturnCode putRing(const ecmdChipTarget & i_target,
+                              const char* i_ringID,
+                              const fapi2::RingMode i_ringMode);
+
+    fapi2::ReturnCode putRing(const ecmdChipTarget & i_target,
                               const scanRingId_t i_address,
                               const fapi2::variable_buffer & i_data,
                               const uint32_t i_ringMode);
@@ -147,18 +151,22 @@ namespace fapi2plat
         fapi2::TARGET_TYPE_NMMU |
         fapi2::TARGET_TYPE_PAU |
         fapi2::TARGET_TYPE_IOHS |
+        fapi2::TARGET_TYPE_PMIC |
+        fapi2::TARGET_TYPE_MDS_CTLR |
         fapi2::TARGET_TYPE_PAUC;
 
     const fapi2::TargetType TARGET_TYPE_CFAM_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
 #ifdef FAPI_2_Z
         fapi2::TARGET_TYPE_SC_CHIP |
 #endif
+        fapi2::TARGET_TYPE_OCMB_CHIP |
         fapi2::TARGET_TYPE_MEMBUF_CHIP;
 
     const fapi2::TargetType TARGET_TYPE_SCAN_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
 #ifdef FAPI_2_Z
         fapi2::TARGET_TYPE_SC_CHIP |
 #endif
+        fapi2::TARGET_TYPE_OCMB_CHIP |
         fapi2::TARGET_TYPE_MEMBUF_CHIP |
         fapi2::TARGET_TYPE_CORE |
         fapi2::TARGET_TYPE_EQ |
@@ -260,6 +268,28 @@ namespace fapi2plat
     template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
     fapi2::ReturnCode putRing(const fapi2::Target<K, M, V>& i_target,
                               const RingId_t i_ringID,
+                              const fapi2::RingMode i_ringMode)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        fapi2::RingMode l_ringMode = i_ringMode;
+        uint32_t l_mode = static_cast<uint32_t>(l_ringMode);
+        const fapi2::plat_target_handle_t & l_handle = i_target.get();
+
+        if (l_handle.multicast)
+        {
+            // Pass the encoded mcast group and core select within ring mode
+            l_mode |= (static_cast<uint32_t>(0x000000FF & l_handle.multicast_group) << 16);
+            l_mode |= (static_cast<uint32_t>(0x0F000000 & l_handle.multicast_group));           
+            l_ringMode = static_cast<fapi2::RingMode>(l_mode);
+        }
+        return fapi2plat::putRing(ecmdTarget, i_ringID, l_ringMode);
+    }
+
+    template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+    fapi2::ReturnCode putRing(const fapi2::Target<K, M, V>& i_target,
+                              const char* i_ringID,
                               const fapi2::RingMode i_ringMode)
     {
         checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
