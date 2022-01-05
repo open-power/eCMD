@@ -70,6 +70,11 @@ uint32_t dllFapi2PutRingByID(
     const uint32_t i_ringID,
     const uint32_t i_ringMode);
 
+uint32_t dllFapi2PutRingByName(
+    const ecmdChipTarget & i_target,
+    const char* i_ringID,
+    const uint32_t i_ringMode);
+
 uint32_t dllFapi2PutRing(
 	const ecmdChipTarget & i_target, 
 	const uint64_t i_address, 

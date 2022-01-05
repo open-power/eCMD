@@ -402,6 +402,45 @@ ReturnCode putRing(const Target<K, M, V>& i_target,
     return l_rc;
 }
 
+/// @brief Platform-level implementation  of putRing()
+/// Hardware procedures writers will not call this function.
+/// @tparam K template parameter, passed in target.
+/// @param[in] i_target   Target to operate on.
+/// @param[in] i_ringID   Ring ID name that will identify the Ring in the image.
+/// @param[in] i_ringMode Ring operation mode.
+/// @return fapi::ReturnCode. FAPI2_RC_SUCCESS if success, else error code.
+template< TargetType K, MulticastType M, typename V >
+ReturnCode putRing(const Target<K, M, V>& i_target,
+                   const char* i_ringID,
+                   const RingMode i_ringMode)
+{
+    fapi2::ReturnCode l_rc;
+    bool l_traceit = fapi2plat::isScanTraceEnabled();
+
+    // call the platform implementation
+    l_rc = fapi2plat::putRing( i_target, i_ringID, i_ringMode );
+
+    if (l_rc != FAPI2_RC_SUCCESS)
+    {
+        char target_string[MAX_ECMD_STRING_LEN];
+        fapi2::toString(i_target, target_string, MAX_ECMD_STRING_LEN);
+        FAPI_ERR("putRing failed - Target %s, RingID %s",
+                 target_string, i_ringID);
+    }
+
+    if( l_traceit )
+    {
+        char target_string[MAX_ECMD_STRING_LEN];
+        fapi2::toString(i_target, target_string, MAX_ECMD_STRING_LEN);
+        FAPI_SCAN( "TRACE : PUTRING     : %s : %s %d",
+                   target_string,
+                   i_ringID,
+                   i_ringMode );
+    }
+
+    return l_rc;
+}
+
 // variable_buffer isn't supported on PPE
 #ifndef __PPE__
 ///

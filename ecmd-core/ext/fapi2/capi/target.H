@@ -519,6 +519,7 @@ Target<K, M, V>::getChipletNumber(void) const
               (l_pEcmdTarget->chipUnitType == "iohs") ||
               (l_pEcmdTarget->chipUnitType == "fc") ||
               (l_pEcmdTarget->chipUnitType == "pauc") ||
+              (l_pEcmdTarget->chipUnitType == "mp") ||
 #ifdef FAPI_2_Z
               (l_pEcmdTarget->chipUnitType == "nest") ||
               (l_pEcmdTarget->chipUnitType == "abus") ||
