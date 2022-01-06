@@ -29,6 +29,8 @@
 #include <adal_sbefifo.h>
 #include <adal_iic.h>
 
+extern bool global_server_debug;
+
 //FIXME remove these
 adal_t * system_gp_reg_open(const char * device, int flags, int type)
 {
@@ -358,12 +360,12 @@ void ServerFSIInstruction::scom_ffdc_and_reset(Handle ** handle, InstructionStat
     // system_scom_ffdc_extract
     //  append to o_status.errorMessage
     // system_scom_ffdc_unlock
-   printf("calling adal_scom_reset()\n");
+    if (global_server_debug) printf("calling adal_scom_reset()\n");
 #ifdef TESTING
-   TEST_PRINT("adal_scom_reset((adal_t *) *handle, SCOMRESETENGINE);\n");
-   rc = 0;
+    TEST_PRINT("adal_scom_reset((adal_t *) *handle, SCOMRESETENGINE);\n");
+    rc = 0;
 #else
-   rc = adal_scom_reset((adal_t *) *handle, SCOMRESETENGINE);
+    rc = adal_scom_reset((adal_t *) *handle, SCOMRESETENGINE);
 #endif
 
     rc = scom_close(*handle);
