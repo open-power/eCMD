@@ -755,7 +755,9 @@ constexpr void _check_valid_parent_of_perv()
 {
     // valid parents for PERV
     // PERV -> PROC
+    // PERV -> OCMB
     static_assert(!((K == fapi2::TARGET_TYPE_PERV) &&
+                    (T != fapi2::TARGET_TYPE_OCMB_CHIP) &&
                     (T != fapi2::TARGET_TYPE_PROC_CHIP)),
                   "improper parent of fapi2::TARGET_TYPE_PERV");
 }
@@ -1026,12 +1028,14 @@ constexpr void _check_ocmb_chip_valid_children()
 {
     // valid children for OCMB
     // OCMB -> MEM_PORT
+    // OCMB -> PERV
     // OCMB -> DIMM
     // OCMB -> PMIC
     // OCMB -> GENERICI2CRESPONDER
     // OCMB -> MDS_CTLR
     static_assert(!((K == fapi2::TARGET_TYPE_OCMB_CHIP) &&
                     (T != fapi2::TARGET_TYPE_MEM_PORT) &&
+                    (T != fapi2::TARGET_TYPE_PERV) &&
                     (T != fapi2::TARGET_TYPE_DIMM) &&
                     (T != fapi2::TARGET_TYPE_PMIC) &&
                     (T != fapi2::TARGET_TYPE_GENERICI2CRESPONDER) &&
