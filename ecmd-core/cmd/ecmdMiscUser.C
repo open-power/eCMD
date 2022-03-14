@@ -228,7 +228,6 @@ uint32_t ecmdGetConfigUser(int argc, char * argv[]) {
   return rc;
 }
 
-
 uint32_t ecmdSetConfigUser(int argc, char * argv[]) {
   uint32_t rc = ECMD_SUCCESS, coeRc = ECMD_SUCCESS;
 
@@ -241,9 +240,27 @@ uint32_t ecmdSetConfigUser(int argc, char * argv[]) {
   char * inputVal = NULL;		 ///< Pointer to argv with value
   std::string printed;           ///< Print Buffer
   ecmdLooperData looperData;     ///< Store internal Looper data
+  uint32_t l_mode = ECMD_SETCONFIG_MODE_REPLACE;   ///< l_mode determines whether to replace, add, or remove the current value in the config file with the new value
 
   int CAGE = 1, NODE = 2, SLOT = 3, POS = 4, CHIPUNIT = 5;
   int depth = 0;                 ///< depth found from Command line parms
+  int l_argOffset = 0;
+
+  /* Flags that support multivalues can use the add and remove options */
+  char * addPtr = ecmdParseOptionWithArgs(&argc, &argv, "add");
+  if (addPtr != NULL)
+  {
+    l_mode = ECMD_SETCONFIG_MODE_ADD;
+    inputVal = addPtr;
+    l_argOffset = 1;
+  }
+  char * removePtr = ecmdParseOptionWithArgs(&argc, &argv, "remove");
+  if (removePtr != NULL)
+  {
+    l_mode = ECMD_SETCONFIG_MODE_REMOVE;
+    inputVal = removePtr;
+    l_argOffset = 1;
+  }
 
   /* get format flag, if it's there */
   std::string format;
@@ -252,6 +269,11 @@ uint32_t ecmdSetConfigUser(int argc, char * argv[]) {
     format = "a";
   } else {
     format = formatPtr;
+  }
+
+  if ((addPtr != NULL) && (removePtr != NULL)) {
+    ecmdOutputError("setconfig - Cannot add and remove a value at the same time.\n");
+    return ECMD_FAILURE;
   }
 
   if (ecmdParseOption(&argc, &argv, "-dk"))             depth = CAGE;
@@ -272,18 +294,19 @@ uint32_t ecmdSetConfigUser(int argc, char * argv[]) {
   /************************************************************************/
   /* Parse Local ARGS here!                                               */
   /************************************************************************/
-  if (argc < 2) {
+
+  if (argc < (2 - l_argOffset)) {
     ecmdOutputError("setconfig - Too few arguments specified; you need at least a ConfigName, Value to set it to.\n");
     ecmdOutputError("setconfig - Type 'setconfig -h' for usage.\n");
     return ECMD_INVALID_ARGS;
   }
 
   //Setup the target that will be used to query the system config
-  if (argc > 3) {
+  if (argc > (3 - l_argOffset)) {
     ecmdOutputError("setconfig - Too many arguments specified; you probably added an unsupported option.\n");
     ecmdOutputError("setconfig - Type 'setconfig -h' for usage.\n");
     return ECMD_INVALID_ARGS;
-  } else if( argc == 3) {
+  } else if (argc == (3 - l_argOffset)) {
     std::string chipType, chipUnitType;
     rc = ecmdParseChipField(argv[0], chipType, chipUnitType);
     if (rc) { 
@@ -317,13 +340,13 @@ uint32_t ecmdSetConfigUser(int argc, char * argv[]) {
       target.chipUnitTypeState = ECMD_TARGET_FIELD_VALID;
     }
     configName = argv[1];
-    inputVal = argv[2];
+    if ((addPtr == NULL) && (removePtr == NULL)) inputVal = argv[2];
   }
   else {
     if (depth == 0) depth = CAGE;
     target.chipTypeState = ECMD_TARGET_FIELD_UNUSED;
     configName = argv[0];
-    inputVal = argv[1];
+    if ((addPtr == NULL) && (removePtr == NULL)) inputVal = argv[1];    
   }
 
   if (format == "a") {
@@ -374,8 +397,7 @@ uint32_t ecmdSetConfigUser(int argc, char * argv[]) {
   if (rc) return rc;
 
   while (ecmdLooperNext(target, looperData) && (!coeRc || coeMode)) {
-
-    rc = ecmdSetConfigurationComplex(target, configName, configData);
+    rc = ecmdSetConfigurationComplexHidden(target, configName, configData, l_mode);
     if (rc) {
       printed = "setconfig - Error occured performing ecmdSetConfiguration on ";
       printed += ecmdWriteTarget(target) + "\n";
