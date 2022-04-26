@@ -779,13 +779,13 @@ if (PERLINC is not None):
 if (PYINC is not None):
     if (PYINC == ""):
         print("ERROR: Unable to determine path to python includes")
-        print("ERROR: Please install the python includes, specify the path via --pyinc or disable python module build")
+        print("ERROR: Please install the python includes, specify the path via --pythoninc or disable python module build")
         sys.exit(1)
     buildvars["PYINC"] = PYINC
 if (PY3INC is not None):
     if (PY3INC == ""):
         print("ERROR: Unable to determine path to python3 includes")
-        print("ERROR: Please install the python3 includes, specify the path via --py3inc or disable python3 module build")
+        print("ERROR: Please install the python3 includes, specify the path via --python3inc or disable python3 module build")
         sys.exit(1)
     buildvars["PY3INC"] = PY3INC
 
