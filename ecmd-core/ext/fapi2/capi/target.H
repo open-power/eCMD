@@ -364,7 +364,7 @@ template< TargetType T, MulticastType O >
 inline Target < T | TARGET_TYPE_MULTICAST, O, V >
 Target<K, M, V>::getMulticast(const MulticastGroup i_group) const
 {
-    static_assert((K == TARGET_TYPE_PROC_CHIP), "Parent target must be the proc chip");
+    static_assert((K & TARGET_TYPE_MULTICAST_CHIP) != 0, "Parent target must be part of TARGET_TYPE_MULTICAST_CHIP");
     static_assert((T & TARGET_TYPE_MULTICASTABLE) != 0,
                   "Requested target type must be part of TARGET_TYPE_MULTICASTABLE");
     static_assert(bitCount<T>::count == 1,

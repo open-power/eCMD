@@ -107,16 +107,6 @@ namespace fapi2plat
                                   const fapi2::variable_buffer& i_data,
                                   fapi2::variable_buffer& o_imageData);
 
-    template< fapi2::MulticastType M, typename V >
-    inline fapi2::ReturnCode setMulticastGroupMap(const fapi2::Target<fapi2::TARGET_TYPE_PROC_CHIP, M, V>& i_chip,
-                                                  const std::vector< fapi2::MulticastGroupMapping >& i_mappings)
-    {
-        ecmdChipTarget ecmdTarget;
-        fapiTargetToEcmdTarget(i_chip, ecmdTarget);
-
-        return fapi2plat::setMulticastGroupMap(ecmdTarget, i_mappings);
-    }
-
     const fapi2::TargetType TARGET_TYPE_SCOM_TARGET = fapi2::TARGET_TYPE_PROC_CHIP |
 #ifdef FAPI_2_Z
         fapi2::TARGET_TYPE_SC_CHIP |
@@ -183,6 +173,17 @@ namespace fapi2plat
     constexpr void checkValidAccess()
     {
         static_assert( ((K & L) != fapi2::TARGET_TYPE_NONE), "Invalid TargetType for HW access" );
+    }
+
+    template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+    inline fapi2::ReturnCode setMulticastGroupMap(const fapi2::Target<K, M, V>& i_chip,
+                                                  const std::vector< fapi2::MulticastGroupMapping >& i_mappings)
+    {
+        checkValidAccess<K, fapi2::TARGET_TYPE_MULTICAST_CHIP>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_chip, ecmdTarget);
+
+        return fapi2plat::setMulticastGroupMap(ecmdTarget, i_mappings);
     }
 
     template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
