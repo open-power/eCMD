@@ -101,8 +101,8 @@ inline OpModes getOpMode(void)
 /// result in error.
 /// i_mappings may contain an arbitrary amount of abstract/HW pairs, but the
 /// function may return an error if too many mappings are specified.
-template< MulticastType M, typename V >
-inline ReturnCode setMulticastGroupMap(const Target<TARGET_TYPE_PROC_CHIP, M, V>& i_chip,
+template< TargetType K, MulticastType M, typename V >
+inline ReturnCode setMulticastGroupMap(const Target<K, M, V>& i_chip,
                                        const std::vector< MulticastGroupMapping >& i_mappings)
 {
     ReturnCode l_rc;
