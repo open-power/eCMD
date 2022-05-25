@@ -213,6 +213,22 @@ uint32_t fapi2GetAttrIdsByType(fapi2::TargetType i_targetTypes, uint32_t i_attri
 
 //@}
 
+/**
+ @brief Given an AttributeData struct representing an attribute enum, returns the same struct, but with the appropriate faInt/faUint data member set, representing the enum value if found
+ @param io_attrData An AttributeData struct, representing an attribute enum (see NOTE below for the required data members the caller must set)
+ @retval ECMD_SUCCESS if successful
+ @retval ECMD_FAPI2_UNKNOWN_TYPE_ERROR or another nonzero value if unsuccessful 
+
+ NOTE: AttributeData.faString must be set to a char* value, representing the enum string you want the numeric value of<br>
+ NOTE: AttributeData.faString can either be just the enum name (e.g. CACHE) or a string in the format ENUM_<attribute_name>_<enum_name> (e.g. ENUM_ATTR_CONTAINED_IPL_TYPE_CACHE)<br>
+ NOTE: AttributeData.faName must be set to a std::string value, representing the name of the attribute the enum string is for<br>
+ NOTE: AttributeData.faValidMask must be set to a uint32_t value, representing the type of the attribute the enum string is for<br>
+ NOTE: For example, if AttributeData.faString = CACHE, AttributeData.faName = ATTR_CONTAINED_IPL_TYPE and AttributeData.faValidMask = FAPI_ATTRIBUTE_TYPE_UINT8,<br>
+ NOTE: if successful, AttributeData.faUint8 would be set to 0x1, representing the int value of the enum CACHE<br>
+ NOTE: If AttributeData.faValidMask = FAPI_ATTRIBUTE_TYPE_INT32, AttributeData.faInt32 would represent the enum value instead. Similar logic applies for all other types<br>
+*/
+uint32_t fapi2AttrEnumStrToEnumVal(fapi2::AttributeData & io_attrData);
+
 #if !defined(ECMD_PYAPI)
 /**
  @brief Output a message related to an error
