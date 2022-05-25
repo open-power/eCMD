@@ -106,7 +106,19 @@ uint32_t fapi2CommandInterpreter(int argc, char* argv[]) {
           rc = ECMD_INT_UNKNOWN_COMMAND;
         }
         break;
+        
+        /************************/
+        /* The S's              */
+        /************************/
+      case 's':
 
+        if (!strcmp(argv[0], "fapi2setattr")) {
+          rc = fapi2SetAttributeUser(argc - 1, argv + 1);
+        } else {
+          /* We don't understand this function, let's let the caller know */
+          rc = ECMD_INT_UNKNOWN_COMMAND;
+        }
+        break;
 
         /************************/
         /* The Unknown          */

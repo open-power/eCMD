@@ -565,6 +565,63 @@ uint32_t fapi2GetAttrIdsByType(fapi2::TargetType i_targetTypes, uint32_t i_attri
   return rc;
 }
 
+uint32_t fapi2AttrEnumStrToEnumVal(fapi2::AttributeData & io_attrData) {
+
+  uint32_t rc;
+
+#ifndef ECMD_STATIC_FUNCTIONS
+  if (dlHandle == NULL) {
+    fprintf(stderr,"dllFapi2AttrEnumStrToEnumVal%s",ECMD_DLL_NOT_LOADED_ERROR);
+    exit(ECMD_DLL_INVALID);
+  }
+#endif
+
+#ifndef ECMD_STRIP_DEBUG
+  int myTcount;
+  std::vector< void * > args;
+  if (ecmdClientDebug != 0) {
+     args.push_back((void*) &io_attrData);
+     fppCallCount++;
+     myTcount = fppCallCount;
+     ecmdFunctionParmPrinter(myTcount, ECMD_FPP_FUNCTIONIN, "uint32_t fapi2AttrEnumStrToEnumVal(AttributeData & io_attrData)",args);
+     ecmdFunctionTimer(myTcount,ECMD_TMR_FUNCTIONIN,"fapi2AttrEnumStrToEnumVal");
+  }
+#endif
+
+#ifdef ECMD_STATIC_FUNCTIONS
+  rc = fapi2AttrEnumStrToEnumVal(io_attrData);
+#else
+  if (fapi2DllFnTable[ECMD_FAPI2ATTRENUMSTRTOENUMVAL] == NULL) {
+     fapi2DllFnTable[ECMD_FAPI2ATTRENUMSTRTOENUMVAL] = (void*)dlsym(dlHandle, "dllFapi2AttrEnumStrToEnumVal");
+     if (fapi2DllFnTable[ECMD_FAPI2ATTRENUMSTRTOENUMVAL] == NULL) {
+       fprintf(stderr,"dllFapi2AttrEnumStrToEnumVal%s",ECMD_UNABLE_TO_FIND_FUNCTION_ERROR); 
+       ecmdDisplayDllInfo();
+       exit(ECMD_DLL_INVALID);
+     }
+  }
+
+  uint32_t (*Function)(AttributeData &) = 
+      (uint32_t(*)(AttributeData &))fapi2DllFnTable[ECMD_FAPI2ATTRENUMSTRTOENUMVAL];
+  rc =    (*Function)(io_attrData);
+#endif
+
+#ifndef ECMD_STRIP_DEBUG
+  if (ecmdClientDebug != 0) {
+     args.push_back((void*) &rc);
+     ecmdFunctionTimer(myTcount,ECMD_TMR_FUNCTIONOUT,"fapi2AttrEnumStrToEnumVal");
+     ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONOUT,"uint32_t fapi2AttrEnumStrToEnumVal(AttributeData & io_attrData)",args);
+   }
+#endif
+
+  if (rc && !ecmdGetGlobalVar(ECMD_GLOBALVAR_QUIETERRORMODE)) {
+    std::string errorString;
+    errorString = ecmdGetErrorMsg(rc, false, ecmdGetGlobalVar(ECMD_GLOBALVAR_CMDLINEMODE), false);
+    if (errorString.size()) ecmdOutput(errorString.c_str());
+  }
+
+  return rc;
+}
+
 void fapi2OutputError(const char* i_message) {
 
 #ifndef ECMD_STATIC_FUNCTIONS
