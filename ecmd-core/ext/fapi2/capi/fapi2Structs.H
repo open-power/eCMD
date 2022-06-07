@@ -101,38 +101,56 @@ struct AttributeData {
   // Members
   uint32_t              faValidMask;  ///< Indicates which of the fields in this structure are valid
   char *                faString;     ///< If the output data is a char *, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   union {
+#endif
     uint8_t             faUint8;      ///< If the output data is a uint8_t, will be populated
     int8_t              faInt8;       ///< If the output data is a int8_t, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   };
   union {
+#endif
     uint16_t            faUint16;      ///< If the output data is a uint16_t, will be populated
     int16_t             faInt16;       ///< If the output data is a int16_t, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   };
   union {
+#endif
     uint32_t            faUint32;     ///< If the output data is a uint32_t, will be populated
     int32_t             faInt32;      ///< If the output data is a int32_t, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   };
   union {
+#endif
     uint64_t            faUint64;     ///< If the output data is a uint64_t, will be populated
     int64_t             faInt64;      ///< If the output data is a int64_t, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   };
   union {
+#endif
     uint8_t *           faUint8ary;   ///< If the output data is a uint8_t array, will be populated
     int8_t *            faInt8ary;    ///< If the output data is a int8_t array, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI) 
   };
   union {
+#endif
     uint16_t *          faUint16ary;  ///< If the output data is a uint16_t array, will be populated
     int16_t *           faInt16ary;   ///< If the output data is a int16_t array, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   };
   union {
+#endif
     uint32_t *          faUint32ary;  ///< If the output data is a uint32_t array, will be populated
     int32_t *           faInt32ary;   ///< If the output data is a int32_t array, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   };
   union {
+#endif
     uint64_t *          faUint64ary;  ///< If the output data is a uint64_t array, will be populated
     int64_t *           faInt64ary;   ///< If the output data is a int64_t array, will be populated
+#if !defined(ECMD_PERLAPI) && !defined(ECMD_PYAPI)
   };
+#endif
   std::string           faName;       ///< Name of attribute (use sparingly).    
   bool                  faEnumUsed;   ///< Indicates if an enum was used or not
   uint8_t               faNumOfArrayDim; //< Indicates how many dimensions the array is (4 max currently)

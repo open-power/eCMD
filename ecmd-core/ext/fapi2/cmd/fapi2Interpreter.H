@@ -54,6 +54,7 @@ uint32_t fapi2CommandInterpreter(int argc, char* argv[]);
 
 /* fapi2MiscUser.C */
 uint32_t fapi2GetAttributeUser(int argc, char * argv[]);
+uint32_t fapi2SetAttributeUser(int argc, char * argv[]);
 uint32_t fapi2DumpAttributeUser(int argc, char * argv[]);
 
 

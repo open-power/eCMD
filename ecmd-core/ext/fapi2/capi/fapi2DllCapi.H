@@ -114,6 +114,8 @@ uint32_t dllFapi2AttributeDataToString(
 	bool i_fullData, 
 	const char * i_format);
 
+uint32_t dllFapi2AttrEnumStrToEnumVal(fapi2::AttributeData & io_attrData);
+
 uint32_t dllFapi2AttributeStringToId(
 	std::string i_attrString, 
 	fapi2::AttributeId & o_attrId);

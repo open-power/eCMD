@@ -1,0 +1,125 @@
+
+Syntax: fapi2setattr [<Chip[.ChipUnit]>] <AttributeName> <AttributeValue> [-i<format>] [-dk | -dn | -ds | -dp | -dc]
+        [-quiet] [-quieterror] [-exist] [-coe] [-a#] [-k#] [-n#] [-s#] [-p#] [-c#]
+
+        ECMD:           FAPI2 Extension
+
+        Function:       Sets the specified attribute with the specified value
+
+        Parameters:
+        --------------------------------------------------------------------------------
+        Chip     [opt]  Specifies the chip to operate on.
+        ChipUnit [opt]  If you are using ChipUnits, you also specify your ChipUnit
+                        w/o  ChipUnit: pu
+                        with ChipUnit: pu.mc
+
+        AttributeName   Name of attribute to set
+
+        AttributeValue  Value to set the attribute to
+
+                        Array values must be passed in as a flat, comma delimited list.
+                        For example, passing in an array with 4 entries can be passed in like so "4,2,1,3", where index 0 would be 4
+                        and index 3 would 3. If instead the array were 2d such as int[2][2], [0][0] would be 4, [0][1] would be 2,[1][0] would be 3 and so on.
+                        Similar logic applies for n-dimensional arrays. For example, passing in a 3d array such as int[2][2][2]
+                        could be passed in like so "1,2,3,4,5,6,7,8", where the array would have the values 
+                        [0][0][0] = 1, [0][0][1] = 2, [0][1][0] = 3, [0][1][1] = 4,
+                        [1][0][0] = 5, [1][0][1] = 6,[1][1][0] = 7,[1][1][1] = 8.
+                        See examples below for more on how to input arrays
+
+        -i<format>[opt] Format of AttributeValue : default 'x'. Only valid with numeric data
+                        Run 'ecmdquery formats' to view available formats
+                        Not valid with input formats 'bX', 'a', 'xcp', or 'bcz'
+
+                        For using -ienum as the input format, AttributeValue must be passed in as
+                        just the enum name (e.g. CACHE) or as a string in the format ENUM_<attribute_name>_<enum_name> 
+                        (e.g. ENUM_ATTR_CONTAINED_IPL_TYPE_CACHE)
+
+        -dk  [optional] Specify cage depth to loop on. When no Chip specified
+                        -dk is default
+
+        -dn  [optional] Specify node depth to loop on. 
+
+        -ds  [optional] Specify slot depth to loop on. 
+
+        -dp  [optional] Specify pos depth to loop on. When Chip specified
+                        -dp is default
+
+        -dc  [optional] Specify chipUnit depth to loop on.
+ 
+                        Run 'ecmdquery options' for a list of the global command line
+                        options and their definitions
+        --------------------------------------------------------------------------------
+ 
+        Examples:      
+         
+        Example of setting an array attribute type (first example is with a int16[8] array and the second is with a uint32[8][2] array):
+                        > fapi2setattr ATTR_DDS_DELAY_ADJUST 0x9,0x41,0x01,0x02,0x01,0x91,0x014,0x9 -ix
+                          k0                 
+                          ATTR_DDS_DELAY_ADJUST = [8]
+                          [0] = 0x09
+                          [1] = 0x41
+                          [2] = 0x01
+                          [3] = 0x02
+                          [4] = 0x01
+                          [5] = 0x91
+                          [6] = 0x14
+                          [7] = 0x09
+                        > fapi2setattr pu ATTR_CRONUS_MULTICAST_GROUP_MAP 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 -id
+                          p10	k0:n0:s0:p00
+                          ATTR_CRONUS_MULTICAST_GROUP_MAP = [8][2]
+                          [0][0] = 1
+                          [0][1] = 2
+                          [1][0] = 3
+                          [1][1] = 4
+                          [2][0] = 5
+                          [2][1] = 6
+                          [3][0] = 7
+                          [3][1] = 8
+                          [4][0] = 9
+                          [4][1] = 10
+                          [5][0] = 11
+                          [5][1] = 12
+                          [6][0] = 13
+                          [6][1] = 14
+                          [7][0] = 15
+                          [7][1] = 16
+                        > fapi2setattr pu ATTR_MEMORY_BAR_REGS 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40 -id
+                          p10	k0:n0:s0:p00
+                          ATTR_MEMORY_BAR_REGS = [4][10][2]
+                          [0][0][0] = 1
+                          [0][0][1] = 2
+                          [0][1][0] = 3
+                          [0][1][1] = 4
+                          [0][2][0] = 5
+                          [0][2][1] = 6
+                          [0][3][0] = 7
+                          [0][3][1] = 8
+                          [0][4][0] = 9
+                          [0][4][1] = 10
+                          [0][5][0] = 11
+                          [0][5][1] = 12
+                          [0][6][0] = 13
+                          [0][6][1] = 14
+                          [0][7][0] = 15
+                          [0][7][1] = 16
+                          [0][8][0] = 17
+                          [0][8][1] = 18
+                          [0][9][0] = 19
+                          [0][9][1] = 20
+                          [1][0][0] = 21
+                          [1][0][1] = 22
+                          .
+                          .
+                          .
+                          [3][9][0] = 39
+                          [3][9][1] = 40
+
+        Example of setting a uint64 attribute type with binary input and specifying a particular chip/chip unit and target level:
+                        > fapi2setattr pu.eq ATTR_QME_LFIRMASK 101 -ib -n1 -p2
+                          p10.eq  k0:n1:s0:p02:c0    
+                          ATTR_QME_LFIRMASK = 0000000000000000000000000000000000000000000000000000000000000101
+
+        Example of setting a uint8 attribute type with an enum string input
+                        > fapi2setattr ATTR_CONTAINED_IPL_TYPE CACHE -ienum
+                          k0
+                          ATTR_CONTAINED_IPL_TYPE = ENUM_ATTR_CONTAINED_IPL_TYPE_CACHE
