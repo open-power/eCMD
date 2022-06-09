@@ -550,38 +550,14 @@ uint32_t fapi2GetAttributeUser(int argc, char * argv[]) {
   rc = ecmdLooperInit(target, ECMD_SELECTED_TARGETS_LOOP, looperData);
   if (rc)
   {
-    if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT8ARY)
-    {
-      delete [] attributeData.faUint8ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT16ARY)
-    {
-      delete [] attributeData.faUint16ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT32ARY)
-    {
-      delete [] attributeData.faUint32ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT64ARY)
-    {
-      delete [] attributeData.faUint64ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT8ARY)
-    {
-      delete [] attributeData.faInt8ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT16ARY)
-    {
-      delete [] attributeData.faInt16ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT32ARY)
-    {
-      delete [] attributeData.faInt32ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT64ARY)
-    {
-      delete [] attributeData.faInt64ary;
-    }
+    if (attributeData.faUint8ary != NULL) delete [] attributeData.faUint8ary;
+    else if (attributeData.faInt8ary != NULL) delete [] attributeData.faInt8ary;
+    if (attributeData.faUint16ary != NULL) delete [] attributeData.faUint16ary;
+    else if (attributeData.faInt16ary != NULL) delete [] attributeData.faInt16ary;
+    if (attributeData.faUint32ary != NULL) delete [] attributeData.faUint32ary;
+    else if (attributeData.faInt32ary != NULL) delete [] attributeData.faInt32ary;
+    if (attributeData.faUint64ary != NULL) delete [] attributeData.faUint64ary;
+    else if (attributeData.faInt64ary != NULL) delete [] attributeData.faInt64ary;
     return rc;
   }
 
@@ -616,39 +592,15 @@ uint32_t fapi2GetAttributeUser(int argc, char * argv[]) {
 
   }
 
-  if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT8ARY)
-  {
-    delete [] attributeData.faUint8ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT16ARY)
-  {
-    delete [] attributeData.faUint16ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT32ARY)
-  {
-    delete [] attributeData.faUint32ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT64ARY)
-  {
-    delete [] attributeData.faUint64ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT8ARY)
-  {
-    delete [] attributeData.faInt8ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT16ARY)
-  {
-    delete [] attributeData.faInt16ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT32ARY)
-  {
-    delete [] attributeData.faInt32ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT64ARY)
-  {
-    delete [] attributeData.faInt64ary;
-  }
-
+  if (attributeData.faUint8ary != NULL) delete [] attributeData.faUint8ary;
+  else if (attributeData.faInt8ary != NULL) delete [] attributeData.faInt8ary;
+  if (attributeData.faUint16ary != NULL) delete [] attributeData.faUint16ary;
+  else if (attributeData.faInt16ary != NULL) delete [] attributeData.faInt16ary;
+  if (attributeData.faUint32ary != NULL) delete [] attributeData.faUint32ary;
+  else if (attributeData.faInt32ary != NULL) delete [] attributeData.faInt32ary;
+  if (attributeData.faUint64ary != NULL) delete [] attributeData.faUint64ary;
+  else if (attributeData.faInt64ary != NULL) delete [] attributeData.faInt64ary;
+  
   // coeRc will be the return code from in the loop, coe mode or not.
   if (coeRc) return coeRc;
 
@@ -992,38 +944,14 @@ uint32_t fapi2SetAttributeUser(int argc, char * argv[]) {
   rc = ecmdLooperInit(target, ECMD_SELECTED_TARGETS_LOOP, looperData);
   if (rc)
   {
-    if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT8ARY)
-    {
-      delete [] attributeData.faUint8ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT16ARY)
-    {
-      delete [] attributeData.faUint16ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT32ARY)
-    {
-      delete [] attributeData.faUint32ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT64ARY)
-    {
-      delete [] attributeData.faUint64ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT8ARY)
-    {
-      delete [] attributeData.faInt8ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT16ARY)
-    {
-      delete [] attributeData.faInt16ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT32ARY)
-    {
-      delete [] attributeData.faInt32ary;
-    }
-    else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT64ARY)
-    {
-      delete [] attributeData.faInt64ary;
-    }
+    if (attributeData.faUint8ary != NULL) delete [] attributeData.faUint8ary;
+    else if (attributeData.faInt8ary != NULL) delete [] attributeData.faInt8ary;
+    if (attributeData.faUint16ary != NULL) delete [] attributeData.faUint16ary;
+    else if (attributeData.faInt16ary != NULL) delete [] attributeData.faInt16ary;
+    if (attributeData.faUint32ary != NULL) delete [] attributeData.faUint32ary;
+    else if (attributeData.faInt32ary != NULL) delete [] attributeData.faInt32ary;
+    if (attributeData.faUint64ary != NULL) delete [] attributeData.faUint64ary;
+    else if (attributeData.faInt64ary != NULL) delete [] attributeData.faInt64ary;
     return rc;
   }
 
@@ -1061,38 +989,14 @@ uint32_t fapi2SetAttributeUser(int argc, char * argv[]) {
 
   }
 
-  if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT8ARY)
-  {
-    delete [] attributeData.faUint8ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT16ARY)
-  {
-    delete [] attributeData.faUint16ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT32ARY)
-  {
-    delete [] attributeData.faUint32ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_UINT64ARY)
-  {
-    delete [] attributeData.faUint64ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT8ARY)
-  {
-    delete [] attributeData.faInt8ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT16ARY)
-  {
-    delete [] attributeData.faInt16ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT32ARY)
-  {
-    delete [] attributeData.faInt32ary;
-  }
-  else if (attributeType == FAPI_ATTRIBUTE_TYPE_INT64ARY)
-  {
-    delete [] attributeData.faInt64ary;
-  }
+  if (attributeData.faUint8ary != NULL) delete [] attributeData.faUint8ary;
+  else if (attributeData.faInt8ary != NULL) delete [] attributeData.faInt8ary;
+  if (attributeData.faUint16ary != NULL) delete [] attributeData.faUint16ary;
+  else if (attributeData.faInt16ary != NULL) delete [] attributeData.faInt16ary;
+  if (attributeData.faUint32ary != NULL) delete [] attributeData.faUint32ary;
+  else if (attributeData.faInt32ary != NULL) delete [] attributeData.faInt32ary;
+  if (attributeData.faUint64ary != NULL) delete [] attributeData.faUint64ary;
+  else if (attributeData.faInt64ary != NULL) delete [] attributeData.faInt64ary;
 
   // coeRc will be the return code from in the loop, coe mode or not.
   if (coeRc) return coeRc;
@@ -1443,38 +1347,14 @@ uint32_t fapi2DumpAttributeUser(int argc, char * argv[])
                 else
                     ecmdOutput(printed.c_str());
 
-                if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_UINT8ARY)
-                {
-                    delete [] attributeData.faUint8ary;
-                }
-                else if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_UINT16ARY)
-                {
-                    delete [] attributeData.faUint16ary;
-                }
-                else if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_UINT32ARY)
-                {
-                    delete [] attributeData.faUint32ary;
-                }
-                else if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_UINT64ARY)
-                {
-                    delete [] attributeData.faUint64ary;
-                }
-                else if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_INT8ARY)
-                {
-                    delete [] attributeData.faInt8ary;
-                }
-                else if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_INT16ARY)
-                {
-                    delete [] attributeData.faInt16ary;
-                }
-                else if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_INT32ARY)
-                {
-                    delete [] attributeData.faInt32ary;
-                }
-                else if (attributeInfoIter->second.attributeType == FAPI_ATTRIBUTE_TYPE_INT64ARY)
-                {
-                    delete [] attributeData.faInt64ary;
-                }
+                if (attributeData.faUint8ary != NULL) delete [] attributeData.faUint8ary;
+                else if (attributeData.faInt8ary != NULL) delete [] attributeData.faInt8ary;
+                if (attributeData.faUint16ary != NULL) delete [] attributeData.faUint16ary;
+                else if (attributeData.faInt16ary != NULL) delete [] attributeData.faInt16ary;
+                if (attributeData.faUint32ary != NULL) delete [] attributeData.faUint32ary;
+                else if (attributeData.faInt32ary != NULL) delete [] attributeData.faInt32ary;
+                if (attributeData.faUint64ary != NULL) delete [] attributeData.faUint64ary;
+                else if (attributeData.faInt64ary != NULL) delete [] attributeData.faInt64ary;
             }
         }
     }
