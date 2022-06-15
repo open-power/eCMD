@@ -1,5 +1,5 @@
 
-Syntax: fapi2setattr [<Chip[.ChipUnit]>] <AttributeName> <AttributeValue> [-i<format>] [-dk | -dn | -ds | -dp | -dc]
+Syntax: fapi2setattr [<Chip[.ChipUnit]>] <AttributeName> <AttributeValue> [-const] [-i<format>] [-dk | -dn | -ds | -dp | -dc]
         [-quiet] [-quieterror] [-exist] [-coe] [-a#] [-k#] [-n#] [-s#] [-p#] [-c#]
 
         ECMD:           FAPI2 Extension
@@ -25,6 +25,8 @@ Syntax: fapi2setattr [<Chip[.ChipUnit]>] <AttributeName> <AttributeValue> [-i<fo
                         [0][0][0] = 1, [0][0][1] = 2, [0][1][0] = 3, [0][1][1] = 4,
                         [1][0][0] = 5, [1][0][1] = 6,[1][1][0] = 7,[1][1][1] = 8.
                         See examples below for more on how to input arrays
+
+        -const    [opt] If specified, will set the attribute value with mode flag FAPI_ATTRIBUTE_MODE_CONST
 
         -i<format>[opt] Format of AttributeValue : default 'x'. Only valid with numeric data
                         Run 'ecmdquery formats' to view available formats
@@ -116,7 +118,7 @@ Syntax: fapi2setattr [<Chip[.ChipUnit]>] <AttributeName> <AttributeValue> [-i<fo
 
         Example of setting a uint64 attribute type with binary input and specifying a particular chip/chip unit and target level:
                         > fapi2setattr pu.eq ATTR_QME_LFIRMASK 101 -ib -n1 -p2
-                          p10.eq  k0:n1:s0:p02:c0    
+                          pu.eq   k0:n1:s0:p02:c0    
                           ATTR_QME_LFIRMASK = 0000000000000000000000000000000000000000000000000000000000000101
 
         Example of setting a uint8 attribute type with an enum string input

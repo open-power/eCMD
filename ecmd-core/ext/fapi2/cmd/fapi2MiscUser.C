@@ -623,6 +623,7 @@ uint32_t fapi2SetAttributeUser(int argc, char * argv[]) {
   ecmdDataBuffer numData;       ///< Initialise data buffer with the numeric value
   std::string printed;          ///< Print Buffer
   ecmdLooperData looperData;    ///< Store internal Looper data
+  bool isConst = false;         ///< Is this a constant attribute value?
 
   int CAGE = 1, NODE = 2, SLOT = 3, POS = 4, CHIPUNIT = 5;
   int depth = 0;                 ///< depth found from Command line parms
@@ -634,6 +635,11 @@ uint32_t fapi2SetAttributeUser(int argc, char * argv[]) {
     format = "x";
   } else {
     format = formatPtr;
+  }
+
+  if (ecmdParseOption(&argc, &argv, "-const"))
+  {
+      isConst = true;
   }
 
   if (ecmdParseOption(&argc, &argv, "-dk"))             depth = CAGE;
@@ -731,6 +737,10 @@ uint32_t fapi2SetAttributeUser(int argc, char * argv[]) {
   fapi2::AttributeData attributeData;
   attributeData.faValidMask = attributeType;
   attributeData.faEnumUsed = attributeEnum;
+  if (isConst)
+  {
+      attributeData.faMode = FAPI_ATTRIBUTE_MODE_CONST;
+  }
 
   // formating error string for failure when calling convertStrToType()
   printed = "fapi2setattr - Error occured when trying to convert inputted value: "; 
