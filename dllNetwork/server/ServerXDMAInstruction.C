@@ -93,7 +93,7 @@ uint32_t ServerXDMAInstruction::xdma_open(Handle ** handle, InstructionStatus & 
         errstr.str(""); errstr.clear();
     }
 
-    if ( *handle == NULL || (*handle != NULL && (int32_t)*handle < 0) )
+    if ( *handle == NULL || (*handle != NULL && (long)*handle < 0) )
     {
         errstr << "ServerXDMAInstruction::xdma_open Problem opening xdma device " << device.str() << " errno " << errno << std::endl;
         o_status.errorMessage.append(errstr.str());
@@ -129,12 +129,12 @@ void ServerXDMAInstruction::xdma_reset(Handle * handle, InstructionStatus & o_st
 #ifdef TESTING
     TEST_PRINT("ioctl(%d, ASPEED_XDMA_IOCTL_RESET)\n", (int)handle);
 #else
-    l_rc = ioctl((int) handle, ASPEED_XDMA_IOCTL_RESET);
+    l_rc = ioctl((long) handle, ASPEED_XDMA_IOCTL_RESET);
 #endif
 
     if ( flags & INSTRUCTION_FLAG_SERVER_DEBUG )
     {
-        errstr << "SERVER_DEBUG : ioctl() *handle = " << (int)handle << ::std::endl;
+        errstr << "SERVER_DEBUG : ioctl() *handle = " << (long)handle << ::std::endl;
         o_status.errorMessage.append(errstr.str());
         errstr.str(""); errstr.clear();
     }
@@ -155,7 +155,7 @@ uint32_t ServerXDMAInstruction::xdma_close(Handle * handle)
 #ifdef TESTING
     TEST_PRINT("close()\n");
 #else
-    close((int) handle);
+    close((long) handle);
 #endif
     return l_rc;
 }
@@ -240,7 +240,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
             }
         }
 
-        l_mmap = static_cast<uint8_t*>(mmap(NULL, l_len, (readLength ? PROT_READ : PROT_WRITE), MAP_SHARED, (int)i_handle, 0));
+        l_mmap = static_cast<uint8_t*>(mmap(NULL, l_len, (readLength ? PROT_READ : PROT_WRITE), MAP_SHARED, (long)i_handle, 0));
         if ( l_mmap == 0 )
         {
             errstr << "ServerXDMAInstruction::xdma_command could not allocate mmap errno " << errno << std::endl;
@@ -265,7 +265,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
 
         if ( flags & INSTRUCTION_FLAG_SERVER_DEBUG )
         {
-            errstr << "SERVER_DEBUG : write(*handle = " << (int)i_handle << ", addr=" << std::hex << std::setfill('0') << std::setw(8) << l_xdma_op.host_addr;
+            errstr << "SERVER_DEBUG : write(*handle = " << (long)i_handle << ", addr=" << std::hex << std::setfill('0') << std::setw(8) << l_xdma_op.host_addr;
             errstr << " len=" << std::dec << l_xdma_op.len << " direction=" << l_xdma_op.direction << ", size=" << sizeof(l_xdma_op) << ")" << ::std::endl;
             o_status.errorMessage.append(errstr.str());
             errstr.str(""); errstr.clear();
@@ -275,7 +275,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
         TEST_PRINT("write(%d, addr=%08X len=%d upstream=%d, size(%d))\n", (int)i_handle, l_xdma_op.host_addr, l_xdma_op.len, l_xdma_op.upstream, sizeof(l_xdma_op));
         l_rc = 0;
 #else
-        l_rc = write( (int)i_handle, &l_xdma_op, sizeof(l_xdma_op) );
+        l_rc = write( (long)i_handle, &l_xdma_op, sizeof(l_xdma_op) );
 #endif
         if ( l_rc < 0 )
         {
@@ -295,7 +295,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
 
         // polling stuff
         errno = 0;
-        l_pollfd.fd = (int)i_handle;
+        l_pollfd.fd = (long)i_handle;
         l_pollfd.events = POLLIN;
         l_intrc = poll( &l_pollfd, 1, -1 );
         if ( l_intrc < 0 )
