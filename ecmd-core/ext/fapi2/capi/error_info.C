@@ -1,6 +1,6 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* 
- * Copyright 2019 IBM International Business Machines Corp.
+ * Copyright 2022 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,17 +63,23 @@ ErrorInfoFfdc::ErrorInfoFfdc(const uint32_t i_ffdcId,
 /// @param[in] i_hw              Hardware to callout
 /// @param[in] i_calloutPriority Priority of callout
 /// @param[in] i_refTarget       Reference to reference target
-/// @param[in[ i_clkPos          Clock position
+/// @param[in] i_clkPos          Clock position
+/// @param[in] i_avsbus          AVS Bus number
+/// @param[in] i_avsrail         AVS Rail number
 ///
 ErrorInfoHwCallout::ErrorInfoHwCallout(
     const HwCallouts::HwCallout i_hw,
     const CalloutPriorities::CalloutPriority i_calloutPriority,
     const Target<TARGET_TYPE_ALL>& i_refTarget,
-    const uint8_t i_clkPos):
+    const uint8_t i_clkPos,
+    const uint8_t i_avsbus,
+    const uint8_t i_avsrail):
     iv_hw(i_hw),
     iv_calloutPriority(i_calloutPriority),
     iv_refTarget(i_refTarget),
-    iv_clkPos(i_clkPos)
+    iv_clkPos(i_clkPos),
+    iv_avsbus(i_avsbus),
+    iv_avsrail(i_avsrail)
 {}
 
 ///
@@ -265,10 +271,12 @@ void ErrorInfoEntryHwCallout::addErrorInfo(std::shared_ptr<ErrorInfo> i_info,
         static_cast<HwCallouts::HwCallout>(iv_hw),
         static_cast<CalloutPriorities::CalloutPriority>(iv_calloutPriority),
         target,
-        iv_clkPos);
+        iv_clkPos,
+        iv_avsbus,
+        iv_avsrail);
 
-    FAPI_DBG("addErrorInfo: Adding hw callout target: 0x%lx hw: %d, pri: %d, pos: %d",
-             ei->iv_refTarget.get(), ei->iv_hw, ei->iv_calloutPriority, ei->iv_clkPos);
+    FAPI_DBG("addErrorInfo: Adding hw callout target: 0x%lx hw: %d, pri: %d, pos: %d, avsbus: %d, avsrail: %d",
+             ei->iv_refTarget.get(), ei->iv_hw, ei->iv_calloutPriority, ei->iv_clkPos, ei->iv_avsbus, ei->iv_avsrail);
 
     i_info->iv_hwCallouts.push_back(std::shared_ptr<ErrorInfoHwCallout>(ei));
 }
@@ -338,9 +346,7 @@ void ErrorInfoEntryBusCallout::addErrorInfo(
         (iv_calloutPriority == CalloutPriorities::HIGH) ?
         CalloutPriorities::MEDIUM : CalloutPriorities::LOW);
 
-    FAPI_DBG("addErrorInfo: Adding bus callout t1: 0x%lx t2: 0x%lx, pri: %d",
-             ei->iv_target1.get(), ei->iv_target2.get(),
-             ei->iv_calloutPriority);
+    FAPI_DBG("addErrorInfo: Adding bus callout pri: %d", ei->iv_calloutPriority);
 
     i_info->iv_busCallouts.push_back(
         std::shared_ptr<ErrorInfoBusCallout>(ei));
@@ -375,8 +381,7 @@ void ErrorInfoEntryTargetCDG::addErrorInfo(
         static_cast<GardTypes::GardType>(iv_gardType)
     );
 
-    FAPI_INF("addErrorInfo: Adding target 0x%lx cdg (%d:%d:%d), pri: %d, gtyp: %d",
-             ei->iv_target.get(),
+    FAPI_INF("addErrorInfo: Adding cdg (%d:%d:%d), pri: %d, gtyp: %d",
              ei->iv_callout, ei->iv_deconfigure,
              ei->iv_gard, ei->iv_calloutPriority,
              ei->iv_gardType);
@@ -415,7 +420,7 @@ void ErrorInfoEntryChildrenCDG::addErrorInfo(
         iv_childNumber);
 
     FAPI_DBG("addErrorInfo: Adding children cdg (%d:%d:%d), type:"
-             " 0x%16lX, pri: %d",
+             " 0x%.16lX, pri: %d",
              ei->iv_callout, ei->iv_deconfigure, ei->iv_gard,
              ei->iv_childType, ei->iv_calloutPriority);
 

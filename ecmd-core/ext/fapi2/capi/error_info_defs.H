@@ -1,6 +1,6 @@
 /* IBM_PROLOG_BEGIN_TAG                                                   */
 /* 
- * Copyright 2021 IBM International Business Machines Corp.
+ * Copyright 2022 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ namespace fapi2
 {
 // For HW callout - Clock position undefined to 0xFF(default)
 #define CLOCK_POS_UNDEF 0xFF
+#define AVSBUS_UNDEF 0xFF
+#define AVSRAIL_UNDEF 0xFF
 
 ///
 /// @brief Type to hold the ffdc data to be sent to hostboot
@@ -372,7 +374,8 @@ inline fapi2::ffdc_t getFfdcData( sbeFfdc_t& i_sbeFfdc, uint8_t i_proc_instance,
                 break;
 
             default:
-                FAPI_ERR("Invalid data size in SBE FFDC buffer");
+                FAPI_ERR("Invalid data size in SBE FFDC buffer, i_sbeFfdc.size = %d",
+                         i_sbeFfdc.size);
                 invalid_data = true;
         }
 
