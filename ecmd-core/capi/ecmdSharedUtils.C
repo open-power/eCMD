@@ -269,7 +269,7 @@ return jhash((const u8*)k, strlen(k), c);
 #endif // ECMD_USE_MCP
 
     uint32_t length;
-    register uint32_t a,b,len;
+    uint32_t a,b,len;
 
     /* Set up the internal state */
     len = strlen(k);
