@@ -20,7 +20,7 @@
 #ifdef DOCUMENTATION
 /**
  * @file ecmdPyApiTypes.H
- * @brief Definitions of the various eCMD Perl API types
+ * @brief Definitions of the various eCMD Python API types
 */
 
 /**

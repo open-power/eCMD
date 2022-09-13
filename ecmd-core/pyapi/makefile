@@ -82,7 +82,7 @@ test:
 	${VERBOSE}ECMD_DLL_FILE=${OUTLIB}/stub.dll PYTHONPATH=${OUTPY} LD_LIBRARY_PATH=${OUTLIB}:${OUTPY} ${ECMDPYTHONBIN} ../pyapi/testBuild.py
 
 doxygen-pyapi:
-	@cp ecmdPyApiTypes.H ${DOXYGEN_PERLAPI_PATH}/.
+	@cp ecmdPyApiTypes.H ${DOXYGEN_PYAPI_PATH}/.
 	@cat ecmdClientPyapi.H ${ECMD_CORE}/capi/ecmdClientCapi.H > ${DOXYGEN_PYAPI_PATH}/ecmdClientPyapi.H
 
 # *****************************************************************************
