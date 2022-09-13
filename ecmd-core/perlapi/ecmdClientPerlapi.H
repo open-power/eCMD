@@ -158,6 +158,8 @@ namespace ECMDPERLAPI {
 
  <ul>
  <li>ecmdClientPerlapi.H</li>
+ <li>ecmdBit64.H</li>
+ <li>ecmdPerlApiTypes.H</li>
  <li>ecmdDataBuffer</li>
  <li>ecmdStructs.H</li>
  <li>ecmdUtils.H</li>

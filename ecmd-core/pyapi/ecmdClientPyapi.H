@@ -142,6 +142,7 @@ char * ecmdParseOptionWithArgs(char ** io_argv, const char * i_option);
 
  <ul>
  <li>ecmdClientPyapi.H</li>
+ <li>ecmdPyApiTypes.H</li>
  <li>ecmdDataBuffer</li>
  <li>ecmdStructs.H</li>
  <li>ecmdUtils.H</li>
