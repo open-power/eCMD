@@ -91,6 +91,9 @@ enum ReturnCodes : uint32_t
     ///< The logical opposite of SUCCESS. Needed where procedures want
     ///< a multi-bool type of operation (e.g., true, false, scom error)
 
+    FAPI2_RC_FILE_NOT_FOUND              = FAPI2_RC_FAPI2_MASK | 0x07,
+    ///< A requested file was not found
+
     //
     // PLAT generated return codes. Additional details may be contained in
     // ReturnCode platData (this can only be looked at by PLAT code)
