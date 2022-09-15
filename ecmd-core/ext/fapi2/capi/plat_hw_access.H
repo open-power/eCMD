@@ -84,6 +84,11 @@ namespace fapi2plat
                               const char* i_ringID,
                               const fapi2::RingMode i_ringMode);
 
+    fapi2::ReturnCode plat_putRingImpl(const ecmdChipTarget & i_target,
+                                       const void* i_scanImage,
+                                       const uint32_t i_modifiedRingAddress,
+                                       const fapi2::RingMode i_ringMode);
+
     fapi2::ReturnCode putRing(const ecmdChipTarget & i_target,
                               const scanRingId_t i_address,
                               const fapi2::variable_buffer & i_data,
@@ -308,6 +313,29 @@ namespace fapi2plat
             l_ringMode = static_cast<fapi2::RingMode>(l_mode);
         }
         return fapi2plat::putRing(ecmdTarget, i_ringID, l_ringMode);
+    }
+
+    template< fapi2::TargetType K, fapi2::MulticastType M, typename V >
+    fapi2::ReturnCode plat_putRingImpl(const fapi2::Target<K, M, V>& i_target,
+                                       const void* i_scanImage,
+                                       const uint32_t i_modifiedRingAddress,
+                                       const fapi2::RingMode i_ringMode)
+    {
+        checkValidAccess<K, TARGET_TYPE_SCAN_TARGET>();
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        fapi2::RingMode l_ringMode = i_ringMode;
+        uint32_t l_mode = static_cast<uint32_t>(l_ringMode);
+        const fapi2::plat_target_handle_t & l_handle = i_target.get();
+
+        if (l_handle.multicast)
+        {
+            // Pass the encoded mcast group and core select within ring mode
+            l_mode |= (static_cast<uint32_t>(0x000000FF & l_handle.multicast_group) << 16);
+            l_mode |= (static_cast<uint32_t>(0x0F000000 & l_handle.multicast_group));           
+            l_ringMode = static_cast<fapi2::RingMode>(l_mode);
+        }
+        return fapi2plat::plat_putRingImpl(ecmdTarget, i_scanImage, i_modifiedRingAddress, l_ringMode);
     }
 
     template< fapi2::TargetType K, fapi2::MulticastType M, typename V >

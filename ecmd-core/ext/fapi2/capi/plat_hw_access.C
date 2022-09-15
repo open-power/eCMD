@@ -707,6 +707,77 @@ namespace fapi2plat
         return rc;
     }
 
+    fapi2::ReturnCode plat_putRingImpl(const ecmdChipTarget & i_target, const void* i_scanImage, const uint32_t i_modifiedRingAddress, const fapi2::RingMode i_ringMode)
+    {
+        fapi2::ReturnCode rc(fapi2::FAPI2_RC_SUCCESS);
+        uint32_t l_ecmdRc;
+
+#ifndef ECMD_STATIC_FUNCTIONS
+        if (dlHandle == NULL)
+        {
+            fprintf(stderr,"dllFapi2PutRingImage%s",ECMD_DLL_NOT_LOADED_ERROR);
+            exit(ECMD_DLL_INVALID);
+        }
+#endif
+
+        if (!fapi2Initialized)
+        {
+            fprintf(stderr,"dllFapi2PlatPutRingImage: eCMD Extension not initialized before function called\n");
+            fprintf(stderr,"dllFapi2PlatPutRingImage: OR eCMD fapi Extension not supported by plugin\n");
+            exit(ECMD_DLL_INVALID);
+        }
+
+#ifndef ECMD_STRIP_DEBUG
+        int myTcount;
+        std::vector< void * > args;
+        if (ecmdClientDebug != 0)
+        {
+            args.push_back((void*) &i_target);
+            args.push_back((void*) &i_scanImage);
+            args.push_back((void*) &i_modifiedRingAddress);
+            args.push_back((void*) &i_ringMode);
+            fppCallCount++;
+            myTcount = fppCallCount;
+            ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONIN,"uint32_t plat_putRingImpl(const ecmdChipTarget & i_target, const void* i_scanImage, const uint32_t i_modifiedRingAddress, const uint32_t i_ringMode)",args);
+            ecmdFunctionTimer(myTcount,ECMD_TMR_FUNCTIONIN,"plat_putRingImpl");
+        }
+#endif
+
+#ifdef ECMD_STATIC_FUNCTIONS
+        l_ecmdRc = dllFapi2PutRingImage(i_target, i_scanImage, i_modifiedRingAddress, i_ringMode);
+#else
+        if (fapi2DllFnTable[ECMD_FAPI2PUTRINGIMAGE] == NULL)
+        {
+            fapi2DllFnTable[ECMD_FAPI2PUTRINGIMAGE] = (void*)dlsym(dlHandle, "dllFapi2PutRingImage");
+            if (fapi2DllFnTable[ECMD_FAPI2PUTRINGIMAGE] == NULL)
+            {
+                fprintf(stderr,"dllFapi2PutRingImage%s",ECMD_UNABLE_TO_FIND_FUNCTION_ERROR); 
+                ecmdDisplayDllInfo();
+                exit(ECMD_DLL_INVALID);
+            }
+        }
+
+        uint32_t (*Function)(const ecmdChipTarget&, const void*, const uint32_t, const uint32_t) = 
+            (uint32_t(*)(const ecmdChipTarget&, const void*, const uint32_t, const uint32_t))fapi2DllFnTable[ECMD_FAPI2PUTRINGIMAGE];
+        l_ecmdRc = (*Function)(i_target, i_scanImage, i_modifiedRingAddress, i_ringMode);
+#endif
+        if (l_ecmdRc)
+        {
+            rc = (fapi2::ReturnCodes) l_ecmdRc; 
+        }
+
+#ifndef ECMD_STRIP_DEBUG
+        if (ecmdClientDebug != 0)
+        {
+            args.push_back((void*) &l_ecmdRc);
+            ecmdFunctionTimer(myTcount,ECMD_TMR_FUNCTIONOUT,"plat_putRingImpl");
+            ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONOUT,"uint32_t plat_putRingImpl(const ecmdChipTarget & i_target, const void* i_scanImage, const uint32_t i_modifiedRingAddress, const uint32_t i_ringMode)",args);
+        }
+#endif
+
+        return rc;
+    }
+
     fapi2::ReturnCode putRing(const ecmdChipTarget & i_target, const scanRingId_t i_address, const fapi2::variable_buffer & i_data, const uint32_t i_ringMode)
     {
         fapi2::ReturnCode rc(fapi2::FAPI2_RC_SUCCESS);

@@ -75,6 +75,12 @@ uint32_t dllFapi2PutRingByName(
     const char* i_ringID,
     const uint32_t i_ringMode);
 
+uint32_t dllFapi2PutRingImage(
+    const ecmdChipTarget & i_target,
+    const void* i_scanImage,
+    const uint32_t i_modifiedRingAddress,
+    const uint32_t i_ringMode);
+
 uint32_t dllFapi2PutRing(
 	const ecmdChipTarget & i_target, 
 	const uint64_t i_address, 
@@ -276,6 +282,14 @@ uint32_t dllFapi2GetMcastGroupTargets(const ecmdChipTarget& i_target,
                                       const uint32_t i_group,
                                       std::list<const ecmdChipTarget*>& o_targets,
                                       const fapi2::TargetState i_state);
+
+uint32_t dllFapi2LoadEmbeddedFile(const ecmdChipTarget& i_target,
+                                  const char* i_path,
+                                  void*& o_data,
+                                  size_t& o_size);
+
+uint32_t dllFapi2FreeEmbeddedFile(void* i_data);
+
 } //extern C
 
 #endif
