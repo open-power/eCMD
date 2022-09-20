@@ -481,6 +481,26 @@ constexpr void _check_valid_parent_of_mdsctlr()
 }
 
 template< fapi2::TargetType K, fapi2::TargetType T >
+constexpr void _check_valid_parent_of_power_ic()
+{
+    // valid parents for POWER_IC
+    // POWER_IC -> OCMB
+    static_assert(!((K == fapi2::TARGET_TYPE_POWER_IC) &&
+                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                  "improper parent of fapi2::TARGET_TYPE_POWER_IC");
+}
+
+template< fapi2::TargetType K, fapi2::TargetType T >
+constexpr void _check_valid_parent_of_temp_sensor()
+{
+    // valid parents for TEMP_SENSOR
+    // TEMP_SENSOR -> OCMB
+    static_assert(!((K == fapi2::TARGET_TYPE_TEMP_SENSOR) &&
+                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                  "improper parent of fapi2::TARGET_TYPE_TEMP_SENSOR");
+}
+
+template< fapi2::TargetType K, fapi2::TargetType T >
 constexpr void _check_valid_parent_of_proc_chip()
 {
     // valid parents for PROC
@@ -899,6 +919,8 @@ constexpr void _check_valid_unicast_parent()
     fapi2plat::_check_valid_parent_of_pmic<K, T>();
     fapi2plat::_check_valid_parent_of_generici2cresponder<K, T>();
     fapi2plat::_check_valid_parent_of_mdsctlr<K, T>();
+    fapi2plat::_check_valid_parent_of_power_ic<K, T>();
+    fapi2plat::_check_valid_parent_of_temp_sensor<K, T>();
     fapi2plat::_check_valid_parent_of_proc_chip<K, T>();
     fapi2plat::_check_valid_parent_of_membuf_chip<K, T>();
     fapi2plat::_check_valid_parent_of_ocmb_chip<K, T>();
@@ -951,6 +973,8 @@ constexpr void _check_proc_chip_valid_children()
     INVALID_CHILD(fapi2::TARGET_TYPE_PROC_CHIP, fapi2::TARGET_TYPE_GENERICI2CRESPONDER)
     INVALID_CHILD(fapi2::TARGET_TYPE_PROC_CHIP, fapi2::TARGET_TYPE_PMIC)
     INVALID_CHILD(fapi2::TARGET_TYPE_PROC_CHIP, fapi2::TARGET_TYPE_MDS_CTLR)
+    INVALID_CHILD(fapi2::TARGET_TYPE_PROC_CHIP, fapi2::TARGET_TYPE_POWER_IC)
+    INVALID_CHILD(fapi2::TARGET_TYPE_PROC_CHIP, fapi2::TARGET_TYPE_TEMP_SENSOR)
 
 #undef INVALID_CHILD
 }
@@ -1033,13 +1057,17 @@ constexpr void _check_ocmb_chip_valid_children()
     // OCMB -> PMIC
     // OCMB -> GENERICI2CRESPONDER
     // OCMB -> MDS_CTLR
+    // OCMB -> POWER_IC
+    // OCMB -> TEMP_SENSOR
     static_assert(!((K == fapi2::TARGET_TYPE_OCMB_CHIP) &&
                     (T != fapi2::TARGET_TYPE_MEM_PORT) &&
                     (T != fapi2::TARGET_TYPE_PERV) &&
                     (T != fapi2::TARGET_TYPE_DIMM) &&
                     (T != fapi2::TARGET_TYPE_PMIC) &&
                     (T != fapi2::TARGET_TYPE_GENERICI2CRESPONDER) &&
-                    (T != fapi2::TARGET_TYPE_MDS_CTLR)),
+                    (T != fapi2::TARGET_TYPE_MDS_CTLR) &&
+                    (T != fapi2::TARGET_TYPE_POWER_IC) &&
+                    (T != fapi2::TARGET_TYPE_TEMP_SENSOR)),
                   "improper child of fapi2::TARGET_TYPE_OCMB_CHIP");
 }
 
