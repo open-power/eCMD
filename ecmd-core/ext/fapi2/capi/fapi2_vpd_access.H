@@ -86,15 +86,15 @@ class VPDInfo<TARGET_TYPE_OCMB_CHIP>
               iv_size(VPD_INFO_INVALID_64),
               iv_omi_freq_mhz(VPD_INFO_INVALID_64),
               iv_rank(VPD_INFO_INVALID_64),
-              iv_dimm_count(VPD_INFO_INVALID_64),
-              iv_total_ranks_dimm0(VPD_INFO_INVALID_64),
-              iv_total_ranks_dimm1(VPD_INFO_INVALID_64),
-              iv_dimm_type(VPD_INFO_INVALID_64),
               iv_is_config_ffdc_enabled(true),
               iv_efd_type(VPD_INFO_INVALID_8),
               iv_dmb_mfg_id(VPD_INFO_INVALID_16),
               iv_dmb_revision(VPD_INFO_INVALID_8),
-              iv_ddr_mode(VPD_INFO_INVALID_8)
+              iv_ddr_mode(VPD_INFO_INVALID_8),
+              iv_dimm_count(VPD_INFO_INVALID_64),
+              iv_total_ranks_dimm0(VPD_INFO_INVALID_64),
+              iv_total_ranks_dimm1(VPD_INFO_INVALID_64),
+              iv_dimm_type(VPD_INFO_INVALID_64)
         {};
 
         // *** INPUT DATA ***
@@ -110,6 +110,19 @@ class VPDInfo<TARGET_TYPE_OCMB_CHIP>
 
         // rank for which settings are valid
         uint64_t iv_rank;
+
+        // set to false to avoid collecting a real ReturnCode
+        bool     iv_is_config_ffdc_enabled;
+
+
+        // *** OUTPUT DATA ***
+
+        // metadata describing the EFD data that was returned
+        uint8_t iv_efd_type;     // e.g. byte 288 of DDIMM SPD
+        uint16_t iv_dmb_mfg_id;  // buffer manufacturer
+        uint8_t iv_dmb_revision; // buffer revision
+        uint8_t iv_ddr_mode;     // DDR4 or DDR5
+
 
         // total number of DIMMs attached
         uint64_t iv_dimm_count;
@@ -128,18 +141,6 @@ class VPDInfo<TARGET_TYPE_OCMB_CHIP>
         // bit1: '1' for DIMM in slot 1
         // bit0: '1' for DIMM in slot 0
         uint64_t iv_dimm_type;
-
-        // set to false to avoid collecting a real ReturnCode
-        bool     iv_is_config_ffdc_enabled;
-
-
-        // *** OUTPUT DATA ***
-
-        // metadata describing the EFD data that was returned
-        uint8_t iv_efd_type;     // e.g. byte 288 of DDIMM SPD
-        uint16_t iv_dmb_mfg_id;  // buffer manufacturer
-        uint8_t iv_dmb_revision; // buffer revision
-        uint8_t iv_ddr_mode;     // DDR4 or DDR5
 };
 
 
