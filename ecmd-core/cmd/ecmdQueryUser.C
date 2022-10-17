@@ -2022,17 +2022,21 @@ uint32_t ecmdQueryUser(int argc, char* argv[]) {
     bool validPosFound = false;
     rc = ecmdLooperInit(target, ECMD_SELECTED_TARGETS_LOOP, looperData);
     if (rc) return rc;
-
+    
+    // We want a minimal amount of errors from the while loop
+    bool l_set_quiet = false;
+    if (!ecmdGetGlobalVar(ECMD_GLOBALVAR_QUIETERRORMODE))
+    {
+        ecmdSetGlobalVar(ECMD_GLOBALVAR_QUIETERRORMODE, 1);
+        l_set_quiet = true;
+    }
     while (ecmdLooperNext(target, looperData)) {
 
       std::list<ecmdChipTarget> targets;
       rc = ecmdRelatedTargets(target, relatedType, targets);
       if (rc) {
-        printed = "ecmdquery - Error occured performing ecmdRelatedTargets on ";
-        printed += ecmdWriteTarget(target);
-        printed += "\n";
-        ecmdOutputError( printed.c_str() );
-        return rc;
+        // Just reset the error and continue on.
+        rc = 0;
       } else {
         validPosFound = true;     
       }
@@ -2050,6 +2054,11 @@ uint32_t ecmdQueryUser(int argc, char* argv[]) {
       }
 
       ecmdOutput(printed.c_str());
+    }
+    
+    if (l_set_quiet)
+    {
+        ecmdSetGlobalVar(ECMD_GLOBALVAR_QUIETERRORMODE, 0);
     }
 
     if (!validPosFound) {
