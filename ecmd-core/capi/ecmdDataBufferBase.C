@@ -2744,7 +2744,7 @@ uint32_t ecmdDataBufferBase::compressBuffer(ecmdCompressionMode_t i_mode) {
     /* They didn't like it when we did (uLongf*)&compressedSize */
     uLongf l_compressedSize = compressedSize;
     /* Do the work */
-    uint32_t rc = compress2(compressedData, &l_compressedSize, uncompressedData, uncompressedSize, level);
+    rc = compress2(compressedData, &l_compressedSize, uncompressedData, uncompressedSize, level);
     if (rc) {
       ETRAC("Error occurred on the zlib compress2 call!");
       RETURN_ERROR(rc); 
@@ -2825,7 +2825,7 @@ uint32_t ecmdDataBufferBase::uncompressBuffer() {
     /* They didn't like it when we did (uLongf*)&uncompressedSize */
     uLongf l_uncompressedSize = uncompressedSize;
     /* Do the work */
-    uint32_t rc = uncompress(uncompressedData, &l_uncompressedSize, compressedData, compressedSize);
+    rc = uncompress(uncompressedData, &l_uncompressedSize, compressedData, compressedSize);
     if (rc) {
       ETRAC("Error occurred on the zlib uncompress call!");
       RETURN_ERROR(rc); 
