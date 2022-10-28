@@ -80,7 +80,6 @@ uint32_t cipBrkptUser(int argc, char* argv[])
 
   ecmdDataBuffer    l_virtAddrOut_96(12*8);
   uint32_t l_addressSize;
-  std::string addr_type;
   uint32_t bpt_size;
   bool clearAll=false;                                 ///< variable to support clear
 
@@ -319,6 +318,7 @@ uint32_t cipBrkptUser(int argc, char* argv[])
                  printed = "Entry Address              Instruction      Par_Id Installed TA Mode Addr_Type\n"; ecmdOutput(printed.c_str());
                  printed = "===== ==================== ================ ====== ========= == ==== =========\n"; ecmdOutput(printed.c_str());
                  bpt_itor = l_brkptTableEntries.begin();
+                 std::string addr_type;
                  // now loop through the table to getall the entries
                  for ( uint32_t i=0; i < bpt_size; i++, bpt_itor++){
                      // convert to aprropriate string values

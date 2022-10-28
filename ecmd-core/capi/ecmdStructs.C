@@ -5279,12 +5279,12 @@ void  ecmdI2CCmdEntry::printStruct() const
  * The following methods for the ecmdNameEntry struct will flatten, unflatten &
  * get the flattened size of the struct.
  */
-uint32_t ecmdNameEntry::flatten(uint8_t *o_buf, uint32_t i_len) const{
+uint32_t ecmdNameEntry::flatten(uint8_t *, uint32_t ) const{
 
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 
-uint32_t ecmdNameEntry::unflatten(const uint8_t *i_buf, uint32_t i_len) {
+uint32_t ecmdNameEntry::unflatten(const uint8_t *, uint32_t ) {
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -5306,12 +5306,12 @@ void  ecmdNameEntry::printStruct() const {
  * The following methods for the ecmdNameVectorEntry struct will flatten, unflatten &
  * get the flattened size of the struct.
  */
-uint32_t ecmdNameVectorEntry::flatten(uint8_t *o_buf, uint32_t i_len) const{
+uint32_t ecmdNameVectorEntry::flatten(uint8_t *, uint32_t ) const{
 
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 
-uint32_t ecmdNameVectorEntry::unflatten(const uint8_t *i_buf, uint32_t i_len) {
+uint32_t ecmdNameVectorEntry::unflatten(const uint8_t *, uint32_t ) {
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -5561,12 +5561,12 @@ void  ecmdIndexVectorEntry::printStruct() const {
  * The following methods for the ecmdLatchEntry struct will flatten, unflatten &
  * get the flattened size of the struct.
  */
-uint32_t ecmdLatchEntry::flatten(uint8_t *o_buf, uint32_t i_len) const {
+uint32_t ecmdLatchEntry::flatten(uint8_t *, uint32_t ) const {
 
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 
-uint32_t ecmdLatchEntry::unflatten(const uint8_t *i_buf, uint32_t i_len) {
+uint32_t ecmdLatchEntry::unflatten(const uint8_t *, uint32_t ) {
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -5598,12 +5598,12 @@ bool ecmdLatchQueryData::isChipUnitMatch(std::string &i_chipUnitType) {
   return false;
 }
 
-uint32_t ecmdLatchQueryData::flatten(uint8_t *o_buf, uint32_t i_len) const {
+uint32_t ecmdLatchQueryData::flatten(uint8_t *, uint32_t ) const {
 
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 
-uint32_t ecmdLatchQueryData::unflatten(const uint8_t *i_buf, uint32_t i_len) {
+uint32_t ecmdLatchQueryData::unflatten(const uint8_t *, uint32_t ) {
         return ECMD_FUNCTION_NOT_SUPPORTED;
 }
 

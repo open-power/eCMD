@@ -1808,7 +1808,7 @@ uint32_t ecmdDataBuffer::memCopyInXstate(const char * i_buf, uint32_t i_bits) { 
     if (i_buf[bit] == '1') {
       iv_Data[index] |= 0x00000001 << (31 - (bit-(index * 32)));
     } else {
-      iv_Data[index] &= (~0x00000001 << (31 - (bit-(index * 32))));
+      iv_Data[index] &= ((uint32_t)(~0x00000001) << (31 - (bit-(index * 32))));
     }
   }
 
@@ -2392,7 +2392,7 @@ uint32_t ecmdDataBuffer::readFileMultiple(const char * i_filename, ecmdFormatTyp
         ins.width(9); ins >> hexstr;
         format = (ecmdFormatType_t) strtoul(hexstr, NULL, 16);
         ins.getline(hexstr, 9);
-        if (strcmp(hexstr, "80000000") == 0) {
+        if (strncmp(hexstr, "80000000", 8) == 0) {
           ins.getline(fac, 200);
           facNameFromFile = fac;
           if (facNameFromFile.find(i_property.c_str(), 0, facNameFromFile.length()) != std::string::npos){
@@ -2569,7 +2569,7 @@ uint32_t ecmdDataBuffer::readFileMultiple(const char * i_filename, ecmdFormatTyp
       RETURN_ERROR(ECMD_DBUF_FILE_FORMAT_MISMATCH);  
     }
     ins.getline(hexstr, 9); 
-    if (strcmp(hexstr, "80000000") == 0) {
+    if (strncmp(hexstr, "80000000", 8) == 0) {
       ins.getline(fac, 200);
       if (o_facName != NULL)
         *o_facName = fac;
@@ -2603,7 +2603,7 @@ uint32_t ecmdDataBuffer::readFileMultiple(const char * i_filename, ecmdFormatTyp
       RETURN_ERROR(ECMD_DBUF_FILE_FORMAT_MISMATCH);
     }
     ins.getline(hexstr, 9);
-    if (strcmp(hexstr, "80000000") == 0) { // String property set
+    if (strncmp(hexstr, "80000000", 8) == 0) { // String property set
       ins.getline(fac, 200);
       if (o_facName != NULL)
         *o_facName = fac;

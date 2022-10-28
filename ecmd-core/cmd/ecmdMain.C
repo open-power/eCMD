@@ -300,7 +300,8 @@ int main (int argc, char *argv[])
               //sprintf(errorbuf,"executing system cmd: %s  \n",curCmd.c_str());
               //ecmdOutputError(errorbuf);
               isSystemCmd = true;
-              (void)system(curCmd.c_str());
+              // to avoid a warning, +1 here or negate the return value when cast to void
+              (void)(system(curCmd.c_str())+1);
             } else {
               sprintf(errorbuf,"ecmd -  Unknown Command specified \n");
               ecmdOutputError(errorbuf);
@@ -326,7 +327,8 @@ int main (int argc, char *argv[])
           {
 
             //  get current tty ..
-            (void)system("tty > ttyfile.txt");
+            // to avoid a warning, +1 here or negate the return value when cast to void
+            (void)(system("tty > ttyfile.txt")+1);
 
             char str[20];
             (void)memset(str,0,sizeof(str));
@@ -342,7 +344,8 @@ int main (int argc, char *argv[])
             }
 
             pipeCmd = pipeCmd + (std::string)" ecmdpipe.txt";
-            (void)system(pipeCmd.c_str());
+            // to avoid a warning, +1 here or negate the return value when cast to void
+            (void)(system(pipeCmd.c_str())+1);
             // back to normal output
 
             printf("pipeMode: exited \n");
@@ -353,7 +356,8 @@ int main (int argc, char *argv[])
           {
 
             //  get current tty ..
-            (void)system("tty > ttyfile.txt");
+            // to avoid a warning, +1 here or negate the return value when cast to void
+            (void)(system("tty > ttyfile.txt")+1);
 
             char str[20];
             (void)memset(str,0,sizeof(str));
