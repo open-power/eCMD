@@ -75,6 +75,18 @@ uint32_t XDMAInstruction::setup(InstructionCommand i_command, std::string &i_dev
     return 0;
 }
 
+uint32_t XDMAInstruction::setup(InstructionCommand i_command, std::string &i_deviceString, uint32_t i_address, uint32_t i_msDelay, uint32_t i_flags, const ecmdDataBuffer * i_data)
+{
+    command = i_command;
+    flags = i_flags;
+    deviceString = i_deviceString;
+    address = i_address;
+    readLength = 0;
+    msDelay = i_msDelay;
+    data = i_data;
+    return 0;
+}
+
 uint32_t XDMAInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_status, Handle ** io_handle)
 {
     int rc = 0;

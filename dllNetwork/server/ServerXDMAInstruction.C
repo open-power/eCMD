@@ -186,25 +186,24 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
             break;
         }
 
-        uint32_t l_tmpLen = 0;
-
+        uint32_t l_byteLen = 0;
         if ( readLength )
-            l_tmpLen = readLength;
+            l_byteLen = readLength % 8 ? (readLength / 8) + 1 : readLength / 8;
         else
-            l_tmpLen = data->getByteLength();
+            l_byteLen = data->getByteLength();
 
         // determine alignment
         const int l_pgSize = getpagesize();
-        uint32_t l_numPages = l_tmpLen / l_pgSize;
+        uint32_t l_numPages = l_byteLen / l_pgSize;
         l_len = l_numPages * l_pgSize;
-        if ( l_tmpLen > l_len ) l_len += l_pgSize; 
+        if ( l_byteLen > l_len ) l_len += l_pgSize; 
 
         if ( readLength )
         {
             // setup the o_data buffer to the appropriate size
             // o_data will be readLength size since l_len could be larger
             // only readLength size will be copied into o_data at end of op
-            o_data.setByteLength( readLength );
+            o_data.setBitLength( readLength );
             l_buffer = new uint8_t[l_len];
             if ( l_buffer == 0 )
             {
@@ -253,7 +252,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
         if ( !readLength )
         {
             // copy the input data buffer to write to the mmap
-            memcpy(l_mmap, l_buffer, l_len);
+            memcpy(l_mmap, l_buffer, l_byteLen);
         }
 
         errno = 0;
@@ -261,7 +260,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
         // setup the xdma command
         l_xdma_op.direction = (readLength ? ASPEED_XDMA_DIRECTION_DOWNSTREAM : ASPEED_XDMA_DIRECTION_UPSTREAM);
         l_xdma_op.host_addr = address;
-        l_xdma_op.len = l_len;
+        l_xdma_op.len = l_byteLen;
 
         if ( flags & INSTRUCTION_FLAG_SERVER_DEBUG )
         {
@@ -309,6 +308,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
 
         if ( readLength )
         {
+            memcpy(l_buffer, l_mmap, o_data.getByteLength());
             // copy the buffer to o_data
             l_uintrc = o_data.insert( l_buffer, 0, readLength );
             if ( l_uintrc )
@@ -319,20 +319,9 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
                 l_rc = -1;
                 break;
             }
-
-            errno = 0;
-            l_intrc = msync( l_buffer, l_len, MS_SYNC );
-            if ( !l_intrc )
-            {
-                errstr << "ServerXDMAInstruction::xdma_command error during msync: rc:" << l_intrc << ", errno:" << errno << std::endl;
-                o_status.errorMessage.append(errstr.str());
-                errstr.str(""); errstr.clear();
-                l_rc = -1;
-                break;
-            }
         }
 
-        l_rc = readLength;
+        l_rc = o_data.getByteLength();
 
     } while (0);
 
@@ -340,7 +329,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
     if ( l_mmap )
     {
         l_intrc = munmap( l_mmap, l_len );
-        if ( !l_intrc )
+        if ( l_intrc )
         {
             errstr << "ServerXDMAInstruction::xdma_command error during munmap: rc:" << l_intrc << ", errno:" << errno << std::endl;
             o_status.errorMessage.append(errstr.str());
