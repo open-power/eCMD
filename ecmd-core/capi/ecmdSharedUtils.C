@@ -269,7 +269,7 @@ return jhash((const u8*)k, strlen(k), c);
 #endif // ECMD_USE_MCP
 
     uint32_t length;
-    register uint32_t a,b,len;
+    uint32_t a,b,len;
 
     /* Set up the internal state */
     len = strlen(k);
@@ -484,16 +484,27 @@ uint64_t ecmdHashString64(const char *i_str, uint64_t i_initval)
     switch(length)                   /* all the case statements fall through */
     {
     case 12: c+=((uint32_t)k[11])<<24;
+             // fall through
     case 11: c+=((uint32_t)k[10])<<16;
+             // fall through
     case 10: c+=((uint32_t)k[9])<<8;
+             // fall through
     case 9 : c+=k[8];
+             // fall through
     case 8 : b+=((uint32_t)k[7])<<24;
+             // fall through
     case 7 : b+=((uint32_t)k[6])<<16;
+             // fall through
     case 6 : b+=((uint32_t)k[5])<<8;
+             // fall through
     case 5 : b+=k[4];
+             // fall through
     case 4 : a+=((uint32_t)k[3])<<24;
+             // fall through
     case 3 : a+=((uint32_t)k[2])<<16;
+             // fall through
     case 2 : a+=((uint32_t)k[1])<<8;
+             // fall through
     case 1 : a+=k[0];
              break;
     case 0 : return c + (((uint64_t)b)<<32);  /* zero length strings require no mixing */

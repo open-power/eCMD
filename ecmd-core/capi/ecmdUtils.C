@@ -623,7 +623,7 @@ std::string ecmdWriteDataFormatted(const ecmdDataBuffer & i_data, std::string i_
       curOffset += blockSize;
     }
 
-    delete outstr;
+    delete [] outstr;
     outstr = NULL;
     printed += "\n";
   }
@@ -658,7 +658,7 @@ std::string ecmdBitsHeader(int initCharOffset, int blockSize, int numCols, int i
 
       int topLineCount = lineCount / 10;
       if (topLineCount != topLineTrack) {
-        sprintf(curNum, "%d", topLineCount);
+        snprintf(curNum, 2, "%d", (uint32_t)(topLineCount % 100));
         topLine += curNum;
         topLineTrack = topLineCount;
       }
@@ -666,7 +666,7 @@ std::string ecmdBitsHeader(int initCharOffset, int blockSize, int numCols, int i
         topLine += " ";
       }
 
-      sprintf(curNum, "%d", lineCount % 10);
+      snprintf(curNum, 2, "%d", (uint32_t)(lineCount % 10));
       bottomLine += curNum;
 
       lineCount++;
@@ -1171,8 +1171,7 @@ void ecmdFunctionParmPrinter(int tCount, efppInOut_t inOut, const char * fprotot
     /* we need to strcmp on variableType and then declare an object of that type. it will go away */
     /* when it falls out of scope */
 
-    if((variableType         == NULL) ||
-       (strlen(variableType) == 0   )   ){
+    if((strlen(variableType) == 0 )){
       printed = frontFPPTxt;
       printed += "ERROR::ecmdFunctionParmPrinter  variableType parsing messed up big time for parm number ";
       sprintf(tempIntStr,"%d",looper);

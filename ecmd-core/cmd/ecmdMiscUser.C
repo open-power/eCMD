@@ -2481,7 +2481,7 @@ uint32_t ecmdSyncPluginStateUser(int argc, char * argv[]) {
 #ifndef ECMD_REMOVE_INIT_FUNCTIONS
 //Synchronizes the ipl mode between fsp and
 // hostboot b/w normal and debug modes
-uint32_t ecmdSyncIplModeUser(int argc, char * argv[]) 
+uint32_t ecmdSyncIplModeUser(int , char * []) 
 {
   uint32_t rc = ECMD_SUCCESS;
   std::string printed;          //Print Buffer

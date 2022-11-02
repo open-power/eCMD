@@ -63,7 +63,7 @@ uint32_t ecmdCheckDllVersion(const char* options);
 // Member Function Specifications
 //---------------------------------------------------------------------
 
-int main (int argc, char *argv[])
+int main (int , char *argv[])
 {
   uint32_t rc = 0;
 

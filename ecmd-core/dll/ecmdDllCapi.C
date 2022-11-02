@@ -329,7 +329,11 @@ uint32_t dllUnloadDll() {
   return rc;
 }
 
+#if defined (_AIX) && not defined (_LP64)
 uint32_t dllCheckDllVersion (const char* options) {
+#else
+__attribute__((noreturn)) uint32_t dllCheckDllVersion (const char* options) {
+#endif
   char ver[20];
   strcpy(ver, ECMD_CAPI_VERSION);
   char major[10];
@@ -351,8 +355,9 @@ uint32_t dllCheckDllVersion (const char* options) {
 
   /* Force an exit here as the dll is not properly initialized we can't allow things to continue */
   exit(0);
-
+#if defined (_AIX) && not defined (_LP64)
   return 0; // JTA 09/27/06 - added to shut down a compiler warning.  It's not smart enough to see the exit above
+#endif
 }
 
 bool dllQueryVersionGreater(const char* version) {
@@ -3336,7 +3341,6 @@ uint32_t dllPutLatch(const ecmdChipTarget & i_target, const char* i_ringName, co
                 }
             }
             // Don't need to do a getRing first when doing a sparse ring.  Just set the size of our ringBuffer
-            std::list<ecmdRingData> l_ring_info;
             rc = dllQueryRing(i_target, l_ring_info, i_ringName, ECMD_QUERY_DETAIL_LOW);
             if (!l_ring_info.empty())
             {
