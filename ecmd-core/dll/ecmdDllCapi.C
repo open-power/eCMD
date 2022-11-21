@@ -264,6 +264,10 @@ uint32_t ecmdGlobal_cmdLineMode = 0;
 uint32_t dllLoadDll (const char* i_clientVersion, uint32_t debugLevel) {
   uint32_t rc;
 
+#if !defined(_LP64) && defined(AIX)
+  std::ignore debugLevel;
+#endif
+
   /* First off let's check our version */
   /* Let's found our '.' char because we only fail if the Major number changes */
   //lint -e613 i_clientVersion is ECMD_CAPI_VERSION so it can't be NULL @02a
