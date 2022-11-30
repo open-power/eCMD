@@ -25,6 +25,7 @@
 #define FAPI2_UTILS_H_
 
 #include <stdint.h>
+#include <endian.h>
 #include <return_code.H>
 #include <target_types.H>
 #include <plat_types.H>
@@ -59,6 +60,59 @@ void endian_swap(T& io_input)
         l_varArray[i] = l_temp;
     }
 }
+
+struct uint8be_t
+{
+    uint8_t _value;
+    inline uint8_t get() const
+    {
+        return _value;
+    }
+    inline void set(uint8_t value)
+    {
+        _value = value;
+    }
+};
+
+///@brief For storing common types big-endian
+struct uint16be_t
+{
+    uint16_t _value;
+    inline uint16_t get() const
+    {
+        return be16toh(_value);
+    }
+    inline void set(uint16_t value)
+    {
+        _value = htobe16(value);
+    }
+};
+
+struct uint32be_t
+{
+    uint32_t _value;
+    inline uint32_t get() const
+    {
+        return be32toh(_value);
+    }
+    inline void set(uint32_t value)
+    {
+        _value = htobe32(value);
+    }
+};
+
+struct uint64be_t
+{
+    uint64_t _value;
+    inline uint64_t get() const
+    {
+        return be64toh(_value);
+    }
+    inline void set(uint64_t value)
+    {
+        _value = htobe64(value);
+    }
+};
 
 /// @brief return true if the input value is nonzero and a power of two, else return false
 constexpr bool is_power_of_two(const uint64_t i_value)
