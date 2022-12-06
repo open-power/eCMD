@@ -84,6 +84,7 @@ CAPI_INCLUDES += vpd_access_defs.H
 CAPI_INCLUDES += fapi2_spd_access.H
 CAPI_INCLUDES += plat_spd_access.H
 CAPI_INCLUDES += fapi2_file_access.H
+CAPI_INCLUDES += file_access.H
 CAPI_INCLUDES += plat_file_access.H
 CAPI_INCLUDES += fapi2_subroutine_executor.H
 CAPI_INCLUDES += subroutine_executor.H
