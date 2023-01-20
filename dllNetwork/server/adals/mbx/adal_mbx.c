@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,46 +27,14 @@
 
 /* GLOBAL VARIABLES ARE BAD IN SHARED LIBRARIES, DON'T USE THEM! */
 #define ADAL_MBX_MAX_STR	128
-
-static const uint32_t fsi_slave_mbx_offset = 0x2800;
+#define ADAL_MBX_FSI_OFFSET 0x2800;
 
 adal_t * adal_mbx_open(const char * device, int flags) {
-	adal_t * adal = NULL;
-
-	adal = (adal_t *)malloc(sizeof(*adal));
-	if (adal == NULL) {
-		return NULL;
-	}
-
-	adal->fd = open(device, flags);
-	if (adal->fd == -1) {
-		free(adal);
-		adal = NULL;
-	}
-	if (adal != NULL) {
-		/* store away file string for /sys access later
-		   use strndup for reasonable limit on path name (128 char) */
-		adal->priv = strndup(device, ADAL_MBX_MAX_STR);
-	}
-
-	return adal;
+	return adal_base_open(device, flags);
 }
 
-
 int adal_mbx_close(adal_t * adal) {
-
-	int rc = 0;
-
-	if (!adal)
-		return 0;
-  free(adal->priv);
-  adal->priv = NULL;
-	rc = close(adal->fd);
-
-	free(adal);
-	adal = NULL;
-
-	return rc;
+  return adal_base_close(adal);
 }
 
 
@@ -115,7 +83,7 @@ int adal_mbx_scratch(adal_t *adal,
 	return rc;
 }
 
-
+/* this method expects the adal to be opened against the raw fsi device for this target */
 int adal_mbx_get_register(adal_t * adal, unsigned long reg,
 		       uint32_t * value)
 {
@@ -128,7 +96,7 @@ int adal_mbx_get_register(adal_t * adal, unsigned long reg,
         reg_address = reg;
         reg_address &= ~0xFFFFFE00;
         reg_address *=4;
-        reg_address += fsi_slave_mbx_offset;
+        reg_address += ADAL_MBX_FSI_OFFSET;
         //  parms.offset = reg_address;
         /**
         * Poison the read value in case we fail and user does not
@@ -154,6 +122,7 @@ int adal_mbx_get_register(adal_t * adal, unsigned long reg,
     return rc;
 }
 
+/* this method expects the adal to be opened against the raw fsi device for this target */
 int adal_mbx_set_register(adal_t *adal, unsigned long reg,
 		       uint32_t value)
 {
@@ -165,7 +134,7 @@ int adal_mbx_set_register(adal_t *adal, unsigned long reg,
     reg_address = reg;
     reg_address &= ~0xFFFFFE00;
     reg_address *=4;
-    reg_address += fsi_slave_mbx_offset;
+    reg_address += ADAL_MBX_FSI_OFFSET;
     lseek(adal->fd, reg_address, SEEK_SET);
     if (adal_is_byte_swap_needed())
     {

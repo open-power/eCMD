@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/utsname.h>
 #include "adal_base.h"
 
@@ -55,3 +56,98 @@ bool adal_is_byte_swap_needed( ) {
     return false;
 }
 
+adal_t * adal_base_open(const char* i_device, int flags)
+{
+    adal_t * adal = NULL;
+
+	adal = (adal_t *)malloc(sizeof(*adal));
+	if (adal == NULL) {
+		return NULL;
+	}
+
+	adal->fd = open(i_device, flags);
+	if (adal->fd == -1) {
+		free(adal);
+		adal = NULL;
+	}
+	if (adal != NULL) {
+		/* store away file string for /sys access later
+		   use strndup for reasonable limit on path name (128 char) */
+		adal->priv = strndup(i_device, 128);
+	}
+
+	return adal;
+}
+
+int adal_base_close(adal_t * i_adal)
+{
+    int rc = 0;
+
+    if( !i_adal ) 
+        return 0;
+
+    free(i_adal->priv);
+    i_adal->priv = NULL;
+    rc = close(i_adal->fd);
+
+    free(i_adal);
+    i_adal = NULL;
+
+    return rc;
+}
+
+const uint32_t fsiRawDevicesNum = 9;
+const uint32_t fsiRawDevicesNumPaths = 5;
+const char * fsiRawDevices[9][5] = {
+    {"", "", "", "", ""},
+    {"/sys/class/fsi-master/fsi0/slave@00:00/raw",
+     "/sys/devices/platform/gpio-fsi/fsi0/slave@00:00/raw",
+     "/sys/devices/platform/fsi-master/slave@00:00/raw",
+     "/sys/bus/platform/devices/fsi-master/slave@00:00/raw",
+     ""},
+    {"/sys/class/fsi-master/fsi1/slave@01:00/raw",
+     "/sys/class/fsi-master/fsi0/slave@00:00/00:00:00:0a/fsi-master/fsi1/slave@01:00/raw",
+     "/sys/devices/platform/gpio-fsi/fsi0/slave@00:00/00:00:00:0a/fsi1/slave@01:00/raw",
+     "/sys/devices/platform/fsi-master/slave@00:00/hub@00/slave@01:00/raw",
+     "/sys/devices/hub@00/slave@01:00/raw"},
+    {"/sys/class/fsi-master/fsi1/slave@02:00/raw", "", "", "", ""},
+    {"/sys/class/fsi-master/fsi1/slave@03:00/raw", "", "", "", ""},
+    {"/sys/class/fsi-master/fsi1/slave@04:00/raw", "", "", "", ""},
+    {"/sys/class/fsi-master/fsi1/slave@05:00/raw", "", "", "", ""},
+    {"/sys/class/fsi-master/fsi1/slave@06:00/raw", "", "", "", ""},
+    {"/sys/class/fsi-master/fsi1/slave@07:00/raw", "", "", "", ""}
+};
+
+adal_t * adal_fsi_open(const uint32_t i_device, int i_flags)
+{
+    adal_t * l_adal = NULL;
+
+    // deviceNum must be between 1 and 8.
+    if( i_device < 1 || i_device > 8 )
+    {
+        return NULL;
+    }
+
+    // try all the devices in the fsiRawDevices list (backwards compatibility stuff)
+    for( uint32_t l_numPathsIdx = 0; l_numPathsIdx < fsiRawDevicesNumPaths; l_numPathsIdx++ )
+    {
+
+#ifdef TESTING
+        TEST_PRINT("adal_base_open(%s, %d)\n", fsiRawDevices[i_deviceNum][l_numPathsIdx], i_flags);
+        *l_adal = (adal_t *) 0x1;
+#else
+        l_adal = adal_base_open(fsiRawDevices[i_device][l_numPathsIdx], i_flags);
+#endif
+        if( l_adal != NULL )
+        {
+            // successful open of the device
+            break;
+        }
+        else
+        {
+            continue;
+        }
+    }
+
+    return l_adal;
+}

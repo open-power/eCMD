@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -411,7 +411,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
         {
 
           /* Open the Handle */
-          rc = scom_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -440,8 +440,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(READSPMEM) Problem reading from FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_READ_FAIL;
-            scom_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -451,7 +450,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
         {
 
           /* Open the Handle */
-          rc = mbx_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -478,8 +477,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(READSPMEM) Problem reading from FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_READ_FAIL;
-            mbx_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -489,7 +487,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
         {
 
           /* Open the Handle */
-          rc = mbx_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -518,9 +516,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(READSPMEM) Problem reading from FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_READ_FAIL;
-            /* I need to unlock the ffdc data after an error per Karlo Petri - JTA 09/20/05 */
-            mbx_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -530,7 +526,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
         {
 
           /* Open the Handle */
-          rc = gp_reg_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -557,8 +553,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(READSPMEM) Problem reading from FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_READ_FAIL;
-            gp_reg_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -567,7 +562,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
         else if (l_type == CFAM_TYPE_SBEFIFO)
         {
           /* Open the Handle */
-          rc = sbefifo_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -596,8 +591,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(READSPMEM) Problem reading from FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SBEFIFO_READ_FAIL;
-            sbefifo_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -662,7 +656,6 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCAN_WRITE_FAIL;
             scan_ffdc_and_reset(io_handle, o_status);
-            break;
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -672,7 +665,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
         {
 
           /* Open the Handle */
-          rc = scom_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -698,18 +691,16 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(WRITESPMEM) Problem writing to FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_WRITE_FAIL;
-            scom_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
-
         }
         else if (l_type == CFAM_TYPE_MBX_SCRATCH)
         {
 
           /* Open the Handle */
-          rc = mbx_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -733,17 +724,15 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(WRITESPMEM) Problem writing to FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_WRITE_FAIL;
-            mbx_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
-
         }
         else if (l_type == CFAM_TYPE_MBX)
         {
           /* Open the Handle */
-          rc = mbx_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -768,18 +757,16 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(WRITESPMEM) Problem writing to FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_WRITE_FAIL;
-            mbx_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
-
         }
         else if (l_type == CFAM_TYPE_GP_REG)
         {
 
           /* Open the Handle */
-          rc = gp_reg_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -803,8 +790,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(WRITESPMEM) Problem writing to FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SCOM_WRITE_FAIL;
-            gp_reg_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -814,7 +800,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
         {
 
           /* Open the Handle */
-          rc = sbefifo_open(io_handle, o_status);
+          rc = fsi_open(io_handle, o_status);
           if (rc) {
             o_status.rc = rc;
             break;
@@ -840,8 +826,7 @@ uint32_t FSIInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o_
             snprintf(errstr, 200, "FSIInstruction::execute(WRITESPMEM) Problem writing to FSI device : errno %d\n", errno);
             o_status.errorMessage.append(errstr);
             rc = o_status.rc = SERVER_FSI_SBEFIFO_WRITE_FAIL;
-            sbefifo_ffdc_and_reset(io_handle, o_status);
-            break;
+            fsi_close(*io_handle);
           } else {
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;
           }
@@ -1384,17 +1369,11 @@ uint32_t FSIInstruction::closeHandle(Handle ** i_handle) {
             rc = scan_close(*i_handle);
             break;
           case CFAM_TYPE_SCOM:
-            rc = scom_close(*i_handle);
-            break;
           case CFAM_TYPE_MBX:
           case CFAM_TYPE_MBX_SCRATCH:
-            rc = mbx_close(*i_handle);
-            break;
           case CFAM_TYPE_GP_REG:
-            rc = gp_reg_close(*i_handle);
-            break;
           case CFAM_TYPE_SBEFIFO:
-            rc = sbefifo_close(*i_handle);
+            rc = fsi_close(*i_handle);
             break;
           case CFAM_TYPE_INVALID:
           default:

@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <OutputLite.H>
 #include <stdio.h>
 #include <errno.h>
+#include <sstream>
 
 #include <adal_sbefifo.h>
 
@@ -36,7 +37,8 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_open(Handle ** handle, InstructionSta
         return rc;
 
     /* We need to open the device*/
-    snprintf(device, 50, "/dev/sbefifo%s", deviceString.c_str());
+    if( version == 0x3 ) snprintf(device, 50, "/dev/sbefifo%s%02d", deviceString.c_str(), port);
+    else snprintf(device, 50, "/dev/sbefifo%s", deviceString.c_str());
     errno = 0;
 
     if (flags & INSTRUCTION_FLAG_SERVER_DEBUG)
@@ -68,6 +70,74 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_open(Handle ** handle, InstructionSta
     return rc;
 }
 
+uint32_t ServerSBEFIFOInstruction::fsi_open(Handle** handle, InstructionStatus & o_status) {
+  uint32_t rc = 0;
+
+  char errstr[200];
+
+  /* already have a handle lets reuse it */
+  if(*handle != NULL)
+    return rc;
+
+  /* We need to open the device*/
+  if ((flags & INSTRUCTION_FLAG_DEVSTR) == 0) {
+    //ERROR
+    *handle = NULL;
+    snprintf(errstr, 200, "ServerSBEFIFOInstruction::fsi_open INSTRUCTION_FLAG_DEVSTR must be set\n");
+    o_status.errorMessage.append(errstr);
+    return SERVER_INVALID_FSI_DEVICE;
+  }
+
+  if (version == 0x3)
+  {
+    *handle = NULL;
+    snprintf(errstr, 200, "ServerSBEFIFOInstruction::fsi_open instruction version %d is invalid for raw fsi access\n", version);
+    o_status.errorMessage.append(errstr);
+    return SERVER_UNKNOWN_INSTRUCTION_VERSION;
+  }
+
+  /* Figure out the slave device based on the deviceString */
+  std::istringstream iss;
+  iss.str(deviceString);
+  uint32_t l_idx = 0;
+  iss >> l_idx;
+
+  if ( (l_idx < 1) || (l_idx > 8) ) {
+    *handle = NULL;
+    snprintf(errstr, 200, "ServerSBEFIFOInstruction::fsi_open deviceString %s is not valid\n", deviceString.c_str());
+    o_status.errorMessage.append(errstr);
+    return SERVER_INVALID_FSI_DEVICE;
+  }
+
+  if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+    snprintf(errstr, 200, "SERVER_DEBUG : adal_fsi_open()\n");
+    o_status.errorMessage.append(errstr);
+  }
+
+  *handle = (Handle *) adal_fsi_open(l_idx, O_RDWR | O_SYNC);
+
+  if (*handle == NULL) {
+    return SERVER_FSI_OPEN_FAIL;
+  }
+
+  if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+    snprintf(errstr, 200, "SERVER_DEBUG : adal_fsi_open() opened = %s\n", (char *)((adal_t *)*handle)->priv);
+    o_status.errorMessage.append(errstr);
+  }
+
+  return rc;
+}
+
+uint32_t ServerSBEFIFOInstruction::fsi_close(Handle * handle)
+{
+#ifdef TESTING
+    TEST_PRINT("adal_base_close((adal_t *) handle);\n");
+    return 0;
+#else
+    return adal_base_close((adal_t *) handle);
+#endif
+}
+
 void ServerSBEFIFOInstruction::sbefifo_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status)
 {
     uint32_t rc = 0;
@@ -80,7 +150,10 @@ void ServerSBEFIFOInstruction::sbefifo_ffdc_and_reset(Handle ** handle, Instruct
 #ifdef TESTING
         TEST_PRINT("adal_sbefifo_request_reset(*handle);\n");
 #else
-        rc = adal_sbefifo_request_reset((adal_t *) *handle);
+        Handle * l_fsiHandle = NULL;
+        rc = fsi_open(&l_fsiHandle, o_status);
+        if( l_fsiHandle != NULL )
+            rc = adal_sbefifo_request_reset((adal_t *) l_fsiHandle);
 #endif
         if (rc) {
             char errstr[200];
@@ -88,6 +161,7 @@ void ServerSBEFIFOInstruction::sbefifo_ffdc_and_reset(Handle ** handle, Instruct
             o_status.errorMessage.append(errstr);
             o_status.rc = SERVER_SBEFIFO_ADAL_RESET_FAIL;
         }
+        fsi_close(l_fsiHandle);
     }
 
     rc = sbefifo_close(*handle);

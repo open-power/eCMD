@@ -276,7 +276,7 @@ uint32_t PNORInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus & o
             }
  #endif
 #endif
-            delete flattenedffsData;
+            delete [] flattenedffsData;
             delete objHolder;
 
             rc = o_status.rc = SERVER_COMMAND_COMPLETE;

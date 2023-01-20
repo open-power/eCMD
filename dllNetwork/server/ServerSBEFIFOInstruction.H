@@ -38,6 +38,10 @@ class ServerSBEFIFOInstruction : public SBEFIFOInstruction
     uint32_t sbefifo_close(Handle * handle);
     ssize_t sbefifo_submit(Handle * i_handle, ecmdDataBufferBase & o_data, InstructionStatus & o_status, uint32_t & o_reply_wordcount);
 
+    private:
+    uint32_t fsi_open(Handle** handle, InstructionStatus & o_status);
+    uint32_t fsi_close(Handle* handle);
+
 };
 
 #endif // _ServerFSIInstruction_H

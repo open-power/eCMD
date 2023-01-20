@@ -164,6 +164,7 @@ int adal_scom_close(adal_t * adal);
  * @return	EBADF	The file descriptor of the underlying device is not valid.
  */
 int adal_scom_reset(adal_t * adal, scom_adal_reset_t type);
+int adal_scom_reset_with_fsi(adal_t * adal, adal_t * adal_fsi, scom_adal_reset_t type);
 
 /*!
  * @brief	This interface is used to read data from the underlying device
