@@ -82,8 +82,8 @@ test:
 	${VERBOSE}ECMD_DLL_FILE=${OUTLIB}/stub.dll PYTHONPATH=${OUTPY} LD_LIBRARY_PATH=${OUTLIB}:${OUTPY} ${ECMDPYTHONBIN} ../pyapi/testBuild.py
 
 doxygen-pyapi:
-	@cp ecmdPyApiTypes.H ${DOXYGEN_PYAPI_PATH}/.
-	@cat ecmdClientPyapi.H ${ECMD_CORE}/capi/ecmdClientCapi.H > ${DOXYGEN_PYAPI_PATH}/ecmdClientPyapi.H
+	@cp ${ECMD_CORE}/pyapi/ecmdPyApiTypes.H ${DOXYGEN_PYAPI_PATH}/.
+	@cat ${ECMD_CORE}/pyapi/ecmdClientPyapi.H ${ECMD_CORE}/capi/ecmdClientCapi.H > ${DOXYGEN_PYAPI_PATH}/ecmdClientPyapi.H
 
 # *****************************************************************************
 # Object Build Targets
@@ -108,7 +108,7 @@ ${SWIG_SOURCE}: ${INCLUDES} ${SWIG_INPUT}
 	@echo Determining SWIG dependencies of $@
 	${VERBOSE}${SWIG} ${SWIGFLAGS} ${DEFINES} ${PYDEFINES} -M -o ${SRCPATH}/${SWIG_SOURCE} -outdir ${OUTPY} ../pyapi/ecmdClientPyapi.i
 	@echo Generating mapping of output parameters
-	${VERBOSE}${ECMD_CORE}/pyapi/gen_apply.py $$(grep "\.H" $(basename ${SRCPATH}/${SWIG_SOURCE}).d | sed 's/\\//;' ) > ${SRCPATH}/ecmdApplyOutArgs.i
+	${VERBOSE}${ECMDPYTHONBIN} ${ECMD_CORE}/pyapi/gen_apply.py $$(grep "\.H" $(basename ${SRCPATH}/${SWIG_SOURCE}).d | sed 's/\\//;' ) > ${SRCPATH}/ecmdApplyOutArgs.i
 	@echo Swigging $@
 	${VERBOSE}${SWIG} ${SWIGFLAGS} ${DEFINES} ${PYDEFINES} -DAPPLY_OUTARGS -o ${SRCPATH}/${SWIG_SOURCE} -outdir ${OUTPY} ../pyapi/ecmdClientPyapi.i
 

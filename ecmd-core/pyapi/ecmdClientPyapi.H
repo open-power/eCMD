@@ -155,10 +155,11 @@ Check ecmdExtPyapi.H to see the supported extensions and how to use them
 
  <hr>
  @section pyv Python Version
- eCMD Scripts need at least Python 2 
+ eCMD Scripts need at least Python 3
+ Use older versions of python at your own risk 
 
  <pre>
- #!/usr/bin/python 
+ #!/usr/bin/python3 
 
  import ecmd
 

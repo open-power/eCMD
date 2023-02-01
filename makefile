@@ -34,9 +34,15 @@ ifeq (${CREATE_PERLAPI},yes)
 endif
 ifeq (${CREATE_PYAPI},yes)
   PYAPI_BUILD := ecmdpyapi
+  PYAPI_PREREQ := ${PYAPI_BUILD}
 endif
 ifeq (${CREATE_PY3API},yes)
   PY3API_BUILD := ecmdpy3api
+endif
+ifeq (${CREATE_PYAPI},no)
+  ifeq (${CREATE_PY3API},yes)
+    PYAPI_PREREQ := ${PY3API_BUILD}
+  endif
 endif
 ifeq (${CREATE_PYECMD},yes)
   PYECMD_BUILD := pyecmd
@@ -98,7 +104,7 @@ doxygen-perlapi: ecmdcapi ${EXT_PERLAPI_TARGETS} ecmdperlapi
 	${VERBOSE}cd ${DOXYGEN_PERLAPI_PATH}; ${DOXYGENBIN} ecmdDoxygenPm.config > /dev/null
 #	${VERBOSE}cd ${DOXYGEN_PERLAPI_PATH}/latex; make; mv refman.pdf ecmdClientPerlapi.pdf
 
-doxygen-pyapi: ecmdcapi ${EXT_PYAPI_TARGETS} ecmdpyapi
+doxygen-pyapi: ecmdcapi ${EXT_PYAPI_TARGETS} ${PYAPI_PREREQ}
 	@echo "Creating Python API doxygen ..."
 	${VERBOSE}${ECMD_ROOT}/mkscripts/makeext.py doxygen pyapi ${DOXYGEN_PYAPI_PATH}
 	${VERBOSE}mkdir -p ${DOXYGEN_PYAPI_PATH}/examples
@@ -135,7 +141,7 @@ ecmdpy3api: ecmdcmd ${EXT_PYAPI_TARGETS}
 	@${MAKE} -C ${ECMD_CORE}/py3api ${MAKECMDGOALS} ${MAKEFLAGS}
 	@echo " "
 
-pyecmd: ecmdpyapi
+pyecmd: ${PYAPI_PREREQ}
 	@echo "pyeCMD Module ${TARGET_ARCH} ..."
 	@${MAKE} -C ${ECMD_CORE}/pyecmd ${MAKECMDGOALS} ${MAKEFLAGS}
 	@echo " "
