@@ -61,3 +61,10 @@ Syntax: stopclocks                                   [-force] [-skip_iovalid]
 
 			To skip the setting of the io valid bits for the X/A bus
 			use -skip_iovalid
+
+	Odyssey Examples:
+	                > stopclocks ocmb all    # stops all clocks except tp, pib, vitl
+	                > stopclocks ocmb sbe    # stops sbe clocks only
+	                > stopclocks ocmb tp     # stops tp clocks only
+	                > stopclocks ocmb mc     # stops mc clocks only
+	                > stopclocks ocmb vitl   # stops vitl clocks only
