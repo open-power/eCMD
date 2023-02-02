@@ -17,6 +17,12 @@ PYECMD_INSTALL_PATH := ${PYTHON_INSTALL_PATH}/pyecmd
 EXTENSIONS_TO_PARSE := $(filter-out fapi2, $(EXT_PYAPI))
 HEADERS_TO_PARSE += $(foreach ext, $(EXTENSIONS_TO_PARSE),$(if $(findstring $(ext)ClientCapi.H,$(shell cat $(EXT_$(ext)_PATH)/pyapi/$(ext)ClientPyapi.i)),$(EXT_$(ext)_PATH)/capi/$(ext)ClientCapi.H))
 
+ifeq ($(CREATE_PYAPI),yes)
+  OUTPYECMDPY := ${OUTPY}/ecmd.py
+else ifeq ($(CREATE_PY3API),yes)
+  OUTPYECMDPY := ${OUTPY3}/ecmd.py
+endif
+
 # *****************************************************************************
 # The Main Targets
 # *****************************************************************************
@@ -63,7 +69,7 @@ ${GENERATED_PY}: ./generate_pyecmd.py $(HEADERS_TO_PARSE)
 	@echo "Generating $@ ..."
 	${VERBOSE}./generate_pyecmd.py $(HEADERS_TO_PARSE) > $@
 
-${CONSTANTS_PY}: ${OUTPY}/ecmd.py
+${CONSTANTS_PY}: ${OUTPYECMDPY}
 	@echo "Generating $@ ..."
 	${VERBOSE}{ \
 	    echo -n "from ecmd import "; \

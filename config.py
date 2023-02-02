@@ -127,6 +127,9 @@ optgroup.add_argument("--sysroot", help="The system root to us.  Default is /", 
 optgroup.add_argument("--swig", help="The swig executable to use\n"
                                      "SWIG from the environment")
 
+# --swigcppperl
+optgroup.add_argument("--swigcppperl", help="The perl to use for -c++ swig command. Default is '-perl5'", default="-perl5")                                     
+
 # --perl
 optgroup.add_argument("--perl", help="The perl executable to use\n"
                                      "ECMDPERLBIN from the environment")
@@ -689,6 +692,10 @@ if (not args.without_swig):
     else:
         SWIG = "/usr/bin/swig"
     buildvars["SWIG"] = SWIG
+    SWIGCPPPERL = ""
+    if (args.swigcppperl is not None):
+        SWIGCPPPERL = args.swigcppperl
+    buildvars["SWIGCPPPERL"] = SWIGCPPPERL
 
 # Location of the perl binary
 if (CREATE_PERLAPI == "yes"):

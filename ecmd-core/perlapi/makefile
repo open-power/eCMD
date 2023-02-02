@@ -35,7 +35,7 @@ else
 endif
 
 # Setup all the options to pass into swig
-SWIGFLAGS := ${SWIGFLAGS} -c++ -perl5 -exportall -const -I${ECMD_CORE}/capi -I${ECMD_CORE}/dll -I${SRCPATH} -Idistro/${INC_DISTRO} -DECMD_PERLAPI -I../perlapi
+SWIGFLAGS := ${SWIGFLAGS} -c++ ${SWIGCPPPERL} -exportall -const -I${ECMD_CORE}/capi -I${ECMD_CORE}/dll -I${SRCPATH} -Idistro/${INC_DISTRO} -DECMD_PERLAPI -I../perlapi
 
 ### Setup our CXXFLAGS and VPATH
 CXXFLAGS := ${CXXFLAGS} -I${ECMD_CORE}/capi -I${ECMD_CORE}/dll -I${SRCPATH}
