@@ -1221,7 +1221,11 @@ uint32_t ecmdQueryUser(int argc, char* argv[]) {
       target.threadState = ECMD_TARGET_FIELD_UNUSED;
     }
 
-    rc = ecmdQueryConfigSelected(target, queryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
+    if (ecmdGetGlobalVar(ECMD_GLOBALVAR_LOOPMODE) == ECMD_CONFIG_LOOP) {
+      rc = ecmdQueryConfigSelected(target, queryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
+    } else {
+      rc = ecmdQueryExistSelected(target, queryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
+    }
 
     /* Use as many STL buffers as possible so we don't keep blowing char buffers and core dumping */
     char buf[300];
@@ -1305,7 +1309,12 @@ uint32_t ecmdQueryUser(int argc, char* argv[]) {
                 target.chipUnitTypeState = target.chipUnitNumState = ECMD_TARGET_FIELD_WILDCARD;
                 target.threadState = ECMD_TARGET_FIELD_UNUSED;
 
-                rc = ecmdQueryConfigSelected(target, chipUnitQueryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
+                if (ecmdGetGlobalVar(ECMD_GLOBALVAR_LOOPMODE) == ECMD_CONFIG_LOOP) {
+                  rc = ecmdQueryConfigSelected(target, chipUnitQueryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
+                } else {
+                  rc = ecmdQueryExistSelected(target, chipUnitQueryData, ECMD_SELECTED_TARGETS_LOOP_DEFALL);
+                }
+
                 /* If it's empty list, we don't have chipUnits and need to return back */
                 if (chipUnitQueryData.cageData.empty()) {
                   /* For non-chipUnit chips OR For chipUnit-chips If chipUnit list is empty */
