@@ -37,7 +37,13 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_open(Handle ** handle, InstructionSta
         return rc;
 
     /* We need to open the device*/
-    if( version == 0x3 ) snprintf(device, 50, "/dev/sbefifo%s%02d", deviceString.c_str(), port);
+    if( version == 0x3 ) 
+    {
+        if( port != UINT32_MAX )
+            snprintf(device, 50, "/dev/sbefifo%s%02d", deviceString.c_str(), port);
+        else
+            snprintf(device, 50, "/dev/sbefifo%s", deviceString.c_str());
+    }
     else snprintf(device, 50, "/dev/sbefifo%s", deviceString.c_str());
     errno = 0;
 
