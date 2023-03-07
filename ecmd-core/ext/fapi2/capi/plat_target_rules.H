@@ -446,7 +446,7 @@ constexpr void _check_valid_parent_of_dimm()
                     (T != fapi2::TARGET_TYPE_MEM_PORT) &&
                     (T != fapi2::TARGET_TYPE_MCA) &&
                     (T != fapi2::TARGET_TYPE_MBA) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_DIMM");
 }
 
@@ -456,7 +456,7 @@ constexpr void _check_valid_parent_of_pmic()
     // valid parents for PMIC
     // PMIC -> OCMB
     static_assert(!((K == fapi2::TARGET_TYPE_PMIC) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_PMIC");
 }
 
@@ -466,7 +466,7 @@ constexpr void _check_valid_parent_of_generici2cresponder()
     // valid parents for GENERICI2CRESPONDER
     // GENERICI2CRESPONDER -> OCMB
     static_assert(!((K == fapi2::TARGET_TYPE_GENERICI2CRESPONDER) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_GENERICI2CRESPONDER");
 }
 
@@ -476,7 +476,7 @@ constexpr void _check_valid_parent_of_mdsctlr()
     // valid parents for MDS_CTLR
     // MDS_CTLR -> OCMB
     static_assert(!((K == fapi2::TARGET_TYPE_MDS_CTLR) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_MDS_CTLR");
 }
 
@@ -486,7 +486,7 @@ constexpr void _check_valid_parent_of_power_ic()
     // valid parents for POWER_IC
     // POWER_IC -> OCMB
     static_assert(!((K == fapi2::TARGET_TYPE_POWER_IC) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_POWER_IC");
 }
 
@@ -496,7 +496,7 @@ constexpr void _check_valid_parent_of_temp_sensor()
     // valid parents for TEMP_SENSOR
     // TEMP_SENSOR -> OCMB
     static_assert(!((K == fapi2::TARGET_TYPE_TEMP_SENSOR) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_TEMP_SENSOR");
 }
 
@@ -621,8 +621,8 @@ constexpr void _check_valid_parent_of_mem_port()
                     (T != fapi2::TARGET_TYPE_MCS) &&
                     (T != fapi2::TARGET_TYPE_MCBIST) &&
                     (T != fapi2::TARGET_TYPE_PERV) &&
-                    (T != fapi2::TARGET_TYPE_PROC_CHIP) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_PROC_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0))) &&
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_MEM_PORT");
 }
 
@@ -777,8 +777,8 @@ constexpr void _check_valid_parent_of_perv()
     // PERV -> PROC
     // PERV -> OCMB
     static_assert(!((K == fapi2::TARGET_TYPE_PERV) &&
-                    (T != fapi2::TARGET_TYPE_OCMB_CHIP) &&
-                    (T != fapi2::TARGET_TYPE_PROC_CHIP)),
+                    ((((T & fapi2::TARGET_TYPE_PROC_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0))) &&
+                    ((((T & fapi2::TARGET_TYPE_OCMB_CHIP) == 0) || ((T & ~fapi2::TARGET_TYPE_ANY_POZ_CHIP) != 0)))),
                   "improper parent of fapi2::TARGET_TYPE_PERV");
 }
 
