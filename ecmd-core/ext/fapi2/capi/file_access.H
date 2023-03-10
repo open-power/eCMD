@@ -40,8 +40,28 @@ namespace fapi2
 /// @param[in]  i_path   Full path name of the file to look for
 /// @param[out] o_data   Will point to the file data on success
 /// @param[out] o_size   Will receive the file size on success
+/// @param[in]  i_flags  Optional flags to affect the operation
 /// @return FAPI2_RC_SUCCESS on success,
 ///         FAPI2_RC_FILE_NOT_FOUND if the file was not found, or another error.
+ReturnCode loadEmbeddedFile(const Target<TARGET_TYPE_ANY_POZ_CHIP>& i_target,
+                            const char* i_path,
+                            const void*& o_data, size_t& o_size,
+                            uint32_t i_flags)
+{
+    return fapi2plat::loadEmbeddedFile(i_target, i_path, o_data, o_size, i_flags);
+}
+
+/// @brief Platform-level implementation of freeEmbeddedFile()
+/// @param[in] i_data  Pointer to file contents
+/// @return FAPI2_RC_SUCCESS on success, else error code
+ReturnCode freeEmbeddedFile(const void* i_data)
+{
+    return fapi2plat::freeEmbeddedFile(i_data);
+}
+
+
+/*** Old versions ***/
+// These can possibly be removed in next release
 ReturnCode loadEmbeddedFile(const Target<TARGET_TYPE_ANY_POZ_CHIP>& i_target,
                             const char* i_path,
                             void*& o_data, size_t& o_size)
@@ -49,9 +69,6 @@ ReturnCode loadEmbeddedFile(const Target<TARGET_TYPE_ANY_POZ_CHIP>& i_target,
     return fapi2plat::loadEmbeddedFile(i_target, i_path, o_data, o_size);
 }
 
-/// @brief Platform-level implementation of freeEmbeddedFile()
-/// @param[in] i_data  Pointer to file contents
-/// @return FAPI2_RC_SUCCESS on success, else error code
 ReturnCode freeEmbeddedFile(void* i_data)
 {
     return fapi2plat::freeEmbeddedFile(i_data);

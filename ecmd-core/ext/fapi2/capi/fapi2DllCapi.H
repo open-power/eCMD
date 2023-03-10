@@ -285,10 +285,11 @@ uint32_t dllFapi2GetMcastGroupTargets(const ecmdChipTarget& i_target,
 
 uint32_t dllFapi2LoadEmbeddedFile(const ecmdChipTarget& i_target,
                                   const char* i_path,
-                                  void*& o_data,
-                                  size_t& o_size);
+                                  const void*& o_data,
+                                  size_t& o_size,
+                                  uint32_t i_flags);
 
-uint32_t dllFapi2FreeEmbeddedFile(void* i_data);
+uint32_t dllFapi2FreeEmbeddedFile(const void* i_data);
 
 } //extern C
 

@@ -31,6 +31,10 @@
 namespace fapi2
 {
 
+enum loadEmbeddedFileFlags
+{
+    // No flags defined at the moment, just for future expansion
+};
 
 /// @brief Load a file from the embedded archive
 /// Attempts to locate a file with given name inside the embedded archive
@@ -40,16 +44,24 @@ namespace fapi2
 /// @param[in]  i_path   Full path name of the file to look for
 /// @param[out] o_data   Will point to the file data on success
 /// @param[out] o_size   Will receive the file size on success
+/// @param[in]  i_flags  Optional flags to affect the operation
 /// @return FAPI2_RC_SUCCESS on success,
 ///         FAPI2_RC_FILE_NOT_FOUND if the file was not found, or another error.
 ReturnCode loadEmbeddedFile(const Target<TARGET_TYPE_ANY_POZ_CHIP>& i_target,
                             const char* i_path,
-                            void*& o_data, size_t& o_size);
+                            const void*& o_data, size_t& o_size,
+                            uint32_t i_flags = 0);
 
 /// @brief Free memory allocated by loadEmbeddedFile()
 /// @param[in] i_data  Pointer to file contents
 /// @return FAPI2_RC_SUCCESS on success, else error code
-ReturnCode freeEmbeddedFile(void* i_data);
+/// @note freeEmbeddedFile() must be called only if the corresponding call to
+///       loadEmbeddedFile() was successful
+/// @note If more than 1 file is loaded in memory with loadEmbeddedFile(), then
+///       freeEmbeddedFile() must be called in a last-in-first-out (LIFO) order.
+///       Calling freeEmbeddedFile () in a random order can lead to unexpected
+//        behavior
+ReturnCode freeEmbeddedFile(const void* i_data);
 
 }
 
