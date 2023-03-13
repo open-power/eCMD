@@ -47,10 +47,34 @@ extern bool ecmdDebugOutput;
 namespace fapi2plat
 {
 
+/***********  Old versions  **************/
+// These can possibly be removed in next release
 fapi2::ReturnCode loadEmbeddedFile(const ecmdChipTarget& i_target,
                          const char* i_path,
                          void*& o_data,
                          size_t& o_size)
+{
+    fapi2::ReturnCode rc(fapi2::FAPI2_RC_SUCCESS);
+    const void* l_data = NULL;
+    // Call new version
+    rc = loadEmbeddedFile(i_target, i_path, l_data, o_size, 0);
+    o_data = const_cast<void*>(l_data);
+    return rc;
+}
+
+fapi2::ReturnCode freeEmbeddedFile(void* i_data)
+{
+    const void* l_data = i_data;
+    return freeEmbeddedFile(l_data);
+}
+
+
+/***********  Current versions  **************/
+fapi2::ReturnCode loadEmbeddedFile(const ecmdChipTarget& i_target,
+                         const char* i_path,
+                         const void*& o_data,
+                         size_t& o_size,
+                         uint32_t i_flags)
 {
     const char * dllFunctionName = "dllFapi2LoadEmbeddedFile";
     fapi2::ReturnCode rc(fapi2::FAPI2_RC_SUCCESS);
@@ -80,15 +104,16 @@ fapi2::ReturnCode loadEmbeddedFile(const ecmdChipTarget& i_target,
         args.push_back((void*) &i_path);
         args.push_back((void*) &o_data);
         args.push_back((void*) &o_size);
+        args.push_back((void*) &i_flags);
         fppCallCount++;
         myTcount = fppCallCount;
-        ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONIN,"uint32_t loadEmbeddedFile(const ecmdChipTarget & i_target, const char* i_path, void*& o_data, size_t& o_size)",args);
+        ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONIN,"uint32_t loadEmbeddedFile(const ecmdChipTarget & i_target, const char* i_path, const void*& o_data, size_t& o_size, uint32_t i_flags)",args);
         ecmdFunctionTimer(myTcount,ECMD_TMR_FUNCTIONIN,"loadEmbeddedFile");
     }
 #endif
 
 #ifdef ECMD_STATIC_FUNCTIONS
-    l_ecmdRc = dllFapi2LoadEmbeddedFile(i_target, i_path, o_data, o_size);
+    l_ecmdRc = dllFapi2LoadEmbeddedFile(i_target, i_path, o_data, o_size, i_flags);
 #else
     if (fapi2DllFnTable[ECMD_FAPI2LOADEMBEDDEDFILE] == NULL)
     {
@@ -101,9 +126,9 @@ fapi2::ReturnCode loadEmbeddedFile(const ecmdChipTarget& i_target,
         }
     }
 
-    uint32_t (*Function)(const ecmdChipTarget&, const char*, void*&, size_t&) = 
-        (uint32_t(*)(const ecmdChipTarget&, const char*, void*&, size_t&))fapi2DllFnTable[ECMD_FAPI2LOADEMBEDDEDFILE];
-    l_ecmdRc = (*Function)(i_target, i_path, o_data, o_size);
+    uint32_t (*Function)(const ecmdChipTarget&, const char*, const void*&, size_t&, uint32_t) = 
+        (uint32_t(*)(const ecmdChipTarget&, const char*, const void*&, size_t&, uint32_t))fapi2DllFnTable[ECMD_FAPI2LOADEMBEDDEDFILE];
+    l_ecmdRc = (*Function)(i_target, i_path, o_data, o_size, i_flags);
 #endif
     if (l_ecmdRc)
     {
@@ -115,14 +140,14 @@ fapi2::ReturnCode loadEmbeddedFile(const ecmdChipTarget& i_target,
     {
         args.push_back((void*) &l_ecmdRc);
         ecmdFunctionTimer(myTcount,ECMD_TMR_FUNCTIONOUT,"loadEmbeddedFile");
-        ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONOUT,"uint32_t loadEmbeddedFile(const ecmdChipTarget & i_target, const char* i_path, void*& o_data, size_t& o_size)",args);
+        ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONOUT,"uint32_t loadEmbeddedFile(const ecmdChipTarget & i_target, const char* i_path, const void*& o_data, size_t& o_size, uint32_t i_flags)",args);
     }
 #endif
 
     return rc;
 }
 
-fapi2::ReturnCode freeEmbeddedFile(void* i_data)
+fapi2::ReturnCode freeEmbeddedFile(const void* i_data)
 {
     const char * dllFunctionName = "dllFapi2FreeEmbeddedFile";
     fapi2::ReturnCode rc(fapi2::FAPI2_RC_SUCCESS);
@@ -151,7 +176,7 @@ fapi2::ReturnCode freeEmbeddedFile(void* i_data)
         args.push_back((void*) &i_data);
         fppCallCount++;
         myTcount = fppCallCount;
-        ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONIN,"uint32_t freeEmbeddedFile(void* i_data)",args);
+        ecmdFunctionParmPrinter(myTcount,ECMD_FPP_FUNCTIONIN,"uint32_t freeEmbeddedFile(const void* i_data)",args);
         ecmdFunctionTimer(myTcount,ECMD_TMR_FUNCTIONIN,"freeEmbeddedFile");
     }
 #endif
@@ -170,8 +195,8 @@ fapi2::ReturnCode freeEmbeddedFile(void* i_data)
         }
     }
 
-    uint32_t (*Function)(void*) = 
-        (uint32_t(*)(void*))fapi2DllFnTable[ECMD_FAPI2FREEEMBEDDEDFILE];
+    uint32_t (*Function)(const void*) = 
+        (uint32_t(*)(const void*))fapi2DllFnTable[ECMD_FAPI2FREEEMBEDDEDFILE];
     l_ecmdRc = (*Function)(i_data);
 #endif
     if (l_ecmdRc)

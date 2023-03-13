@@ -34,10 +34,32 @@ namespace fapi2plat
 {
     fapi2::ReturnCode loadEmbeddedFile(const ecmdChipTarget& i_target,
                                        const char* i_path,
+                                       const void*& o_data, 
+                                       size_t& o_size,
+                                       uint32_t i_flags);
+
+    fapi2::ReturnCode freeEmbeddedFile(const void* i_data);
+
+
+    inline fapi2::ReturnCode loadEmbeddedFile(const fapi2::Target<fapi2::TARGET_TYPE_ANY_POZ_CHIP>& i_target,
+                                    const char* i_path,
+                                    const void*& o_data,
+                                    size_t& o_size,
+                                    uint32_t i_flags)
+    {
+        ecmdChipTarget ecmdTarget;
+        fapiTargetToEcmdTarget(i_target, ecmdTarget);
+        return fapi2plat::loadEmbeddedFile(ecmdTarget, i_path, o_data, o_size, i_flags);
+    }
+
+    /***** Old versions *******/
+    // These can possibly be removed in next release
+    fapi2::ReturnCode freeEmbeddedFile(void* i_data);
+
+    fapi2::ReturnCode loadEmbeddedFile(const ecmdChipTarget& i_target,
+                                       const char* i_path,
                                        void*& o_data, 
                                        size_t& o_size);
-
-    fapi2::ReturnCode freeEmbeddedFile(void* i_data);
 
     inline fapi2::ReturnCode loadEmbeddedFile(const fapi2::Target<fapi2::TARGET_TYPE_ANY_POZ_CHIP>& i_target,
                                     const char* i_path,
@@ -48,6 +70,7 @@ namespace fapi2plat
         fapiTargetToEcmdTarget(i_target, ecmdTarget);
         return fapi2plat::loadEmbeddedFile(ecmdTarget, i_path, o_data, o_size);
     }
+
 };
 
 #endif // _FAPI2_PLAT_FILE_ACCESS_H_
