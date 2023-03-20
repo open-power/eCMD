@@ -23,6 +23,8 @@
 #include <errno.h>
 #include <sstream>
 
+#include <sys/ioctl.h>
+
 #include <adal_sbefifo.h>
 
 uint32_t ServerSBEFIFOInstruction::sbefifo_open(Handle ** handle, InstructionStatus & o_status)
@@ -183,6 +185,43 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_close(Handle * handle)
 #else
     return adal_sbefifo_close((adal_t *) handle);
 #endif
+}
+
+uint32_t ServerSBEFIFOInstruction::sbefifo_set_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status)
+{
+    uint32_t rc = 0;
+    char errstr[200];
+
+    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d)\n", i_timeoutInSeconds);
+        o_status.errorMessage.append(errstr);
+    }
+
+#ifdef TESTING
+    TEST_PRINT("ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d);\n", i_timeoutInSeconds);
+#else
+    rc = ioctl(((adal_t*)i_handle)->fd, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, &i_timeoutInSeconds);
+
+    if( rc && errno != ENOTTY )
+    {
+        snprintf(errstr, 200, "ServerSBEFIFOInstruction::sbefifo_ffdc_and_reset Reset of adal failed!\n");
+        o_status.errorMessage.append(errstr);
+        rc = o_status.rc = SERVER_SBEFIFO_SET_TIMEOUT_FAIL;
+    }
+    else if( errno == ENOTTY )
+    {
+        // function not supported on server side, not sure we entirely care yet...
+        rc = 0;
+    }
+
+#endif
+
+    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d) rc = %d, errno = %d\n", i_timeoutInSeconds, rc, errno);
+        o_status.errorMessage.append(errstr);
+    }
+
+    return rc;
 }
 
 ssize_t ServerSBEFIFOInstruction::sbefifo_submit(Handle * i_handle, ecmdDataBufferBase & o_data, InstructionStatus & o_status, uint32_t & o_reply_wordcount)

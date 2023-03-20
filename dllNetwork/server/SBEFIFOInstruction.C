@@ -102,6 +102,16 @@ uint32_t SBEFIFOInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus 
                 break;
             }
 
+            /* Set the sbefifo cmd timeout (s) based on timeout (ms) passed in */
+            uint32_t l_tmpSecondsFromTimeout = timeout / 1000;
+            rc = sbefifo_set_timeout(*io_handle, l_tmpSecondsFromTimeout, o_status);
+            if( rc )
+            {
+                // should only get here if the driver supports this function and we get an error setting it
+                // method sets up o_status.rc and rc appropriately
+                break;
+            }
+
             o_data.setWordLength(replyLength);
 
             /* Actually write to the device */

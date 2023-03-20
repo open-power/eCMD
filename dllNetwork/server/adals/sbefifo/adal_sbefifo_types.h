@@ -23,6 +23,9 @@
 #include <stddef.h>
 #include <adal_base.h>
 
+#include <linux/types.h>
+#include <linux/ioctl.h>
+
 struct adal_sbefifo_op
 {
 	void * data;     		/* data pointer - "in" for request , "out" for reply */
@@ -71,5 +74,8 @@ typedef struct adal_sbefifo_op adal_sbefifo_reply;
 
 /* Bits in status register */
 #define ADAL_SBEFIFO_REQUESTRESET_BIT 0x02000000   /* Bit 6 is the request reset bit */
+
+/* Cmd timeout in seconds ioctl specification*/
+#define FSI_SBEFIFO_CMD_TIMEOUT_SECONDS  _IOW('s', 0x01, __u32)
 
 #endif
