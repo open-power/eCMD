@@ -204,7 +204,7 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_set_timeout(Handle * i_handle, uint32
 
     if( rc && errno != ENOTTY )
     {
-        snprintf(errstr, 200, "ServerSBEFIFOInstruction::sbefifo_ffdc_and_reset Reset of adal failed!\n");
+        snprintf(errstr, 200, "ServerSBEFIFOInstruction::sbefifo_set_timeout Set timeout in seconds failed!\n");
         o_status.errorMessage.append(errstr);
         rc = o_status.rc = SERVER_SBEFIFO_SET_TIMEOUT_FAIL;
     }
