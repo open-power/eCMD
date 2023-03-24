@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sstream>
+#include <iomanip>
+#include <iterator>
 #include <adal_iic.h>
 #include <ecmdStructs.H>
 
@@ -426,6 +428,12 @@ uint32_t ServerI2CInstruction::iic_config_slave_address(Handle * i_handle, Instr
         system_iic * handle = (system_iic *) i_handle;
         if ( (handle->funcs & I2C_FUNC_10BIT_ADDR) == I2C_FUNC_10BIT_ADDR )
         {
+            
+            if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+                char errstr[200];
+                snprintf(errstr, 200, "SERVER_DEBUG : iic_config_slave_address() I2C_TENBIT enabled\n");
+                o_status.errorMessage.append(errstr);
+            }
             rc = ioctl(handle->fd, I2C_TENBIT, 1);
             if ( rc ) return rc;
             handle->slave_address = slaveAddress;
@@ -672,6 +680,7 @@ ssize_t ServerI2CInstruction::iic_read(Handle * i_handle, ecmdDataBufferBase & o
             uint32_t tmpbytes = ((msgMax*(idx+1)) > bytes) ? bytes - (msgMax*idx) : msgMax;
             rdwr_data->msgs[msg_offset].len = tmpbytes;
             rdwr_data->msgs[msg_offset].buf = new uint8_t[tmpbytes];
+            bzero(rdwr_data->msgs[msg_offset].buf, tmpbytes);
 
             msg_offset++;
         }
@@ -682,7 +691,16 @@ ssize_t ServerI2CInstruction::iic_read(Handle * i_handle, ecmdDataBufferBase & o
             o_status.errorMessage.append(errstr);
             for( uint32_t msgidx=0; msgidx < messages; msgidx++)
             {
-                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf...\n", msgidx, rdwr_data->msgs[msgidx].addr, rdwr_data->msgs[msgidx].flags, rdwr_data->msgs[msgidx].len);
+                std::vector<std::string> bufdata;
+                for( uint32_t bufidx=0; msgidx == 0 && bufidx < 16 && bufidx < rdwr_data->msgs[msgidx].len; bufidx++ )
+                {
+                    std::ostringstream oss;
+                    oss << std::hex << std::setfill('0') << std::setw(2) << unsigned(rdwr_data->msgs[msgidx].buf[bufidx]);
+                    bufdata.push_back(oss.str());
+                }
+                std::ostringstream bufdatajoined;
+                std::copy(bufdata.begin(), bufdata.end(), std::ostream_iterator<std::string>(bufdatajoined, " "));
+                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf %s\n", msgidx, rdwr_data->msgs[msgidx].addr, rdwr_data->msgs[msgidx].flags, rdwr_data->msgs[msgidx].len, bufdatajoined.str().c_str());
                 o_status.errorMessage.append(errstr);
             }
         }
@@ -799,7 +817,16 @@ ssize_t ServerI2CInstruction::iic_write(Handle * i_handle, InstructionStatus & o
             o_status.errorMessage.append(errstr);
             for( uint32_t idx=0; idx < messages; idx++)
             {
-                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf...\n", idx, rdwr_data->msgs[idx].addr, rdwr_data->msgs[idx].flags, rdwr_data->msgs[idx].len);
+                std::vector<std::string> bufdata;
+                for( uint32_t bufidx=0; idx == 0 && bufidx < 16 && bufidx < rdwr_data->msgs[msgidx].len; bufidx++ )
+                {
+                    std::ostringstream oss;
+                    oss << std::hex << std::setfill('0') << std::setw(2) << unsigned(rdwr_data->msgs[msgidx].buf[bufidx]);
+                    bufdata.push_back(oss.str());
+                }
+                std::ostringstream bufdatajoined;
+                std::copy(bufdata.begin(), bufdata.end(), std::ostream_iterator<std::string>(bufdatajoined, " "));
+                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf %s\n", idx, rdwr_data->msgs[idx].addr, rdwr_data->msgs[idx].flags, rdwr_data->msgs[idx].len, bufdatajoined.str().c_str());
                 o_status.errorMessage.append(errstr);
             }
         }
