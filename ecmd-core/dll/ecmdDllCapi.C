@@ -384,6 +384,13 @@ bool dllQueryVersionGreater(const char* version) {
   return false;
 }
 
+/*Compares the Chipunit number and returns true 
+  if first ecmdChipUnitData has a lower ChipUnit Number*/
+bool compareChipUnitNum(ecmdChipUnitData a, ecmdChipUnitData b)
+{
+  return a.chipUnitNum < b.chipUnitNum;
+}
+
 void ecmdIncrementLooperIterators (uint8_t level, ecmdLooperData& io_state);
 
 // dllConfigLooperInit and dllExistLooperInit just call dllLooperInit in the correct mode
@@ -1907,6 +1914,8 @@ uint32_t queryConfigExistSelected(ecmdChipTarget & i_target, ecmdQueryData & o_q
             }
           }
 
+          /* sort the chipUnits based on the chip unit numbers*/ 
+          curChip->chipUnitData.sort(compareChipUnitNum);
           /* Walk through all the chipUnits */
           std::list<ecmdChipUnitData>::iterator curChipUnit = curChip->chipUnitData.begin();
           while (curChipUnit != curChip->chipUnitData.end()) {
