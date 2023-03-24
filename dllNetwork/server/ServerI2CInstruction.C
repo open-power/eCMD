@@ -818,10 +818,10 @@ ssize_t ServerI2CInstruction::iic_write(Handle * i_handle, InstructionStatus & o
             for( uint32_t idx=0; idx < messages; idx++)
             {
                 std::vector<std::string> bufdata;
-                for( uint32_t bufidx=0; idx == 0 && bufidx < 16 && bufidx < rdwr_data->msgs[msgidx].len; bufidx++ )
+                for( uint32_t bufidx=0; idx == 0 && bufidx < 16 && bufidx < rdwr_data->msgs[idx].len; bufidx++ )
                 {
                     std::ostringstream oss;
-                    oss << std::hex << std::setfill('0') << std::setw(2) << unsigned(rdwr_data->msgs[msgidx].buf[bufidx]);
+                    oss << std::hex << std::setfill('0') << std::setw(2) << unsigned(rdwr_data->msgs[idx].buf[bufidx]);
                     bufdata.push_back(oss.str());
                 }
                 std::ostringstream bufdatajoined;
