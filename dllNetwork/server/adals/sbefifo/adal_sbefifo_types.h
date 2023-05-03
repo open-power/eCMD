@@ -77,5 +77,6 @@ typedef struct adal_sbefifo_op adal_sbefifo_reply;
 
 /* Cmd timeout in seconds ioctl specification*/
 #define FSI_SBEFIFO_CMD_TIMEOUT_SECONDS  _IOW('s', 0x01, __u32)
+#define FSI_SBEFIFO_READ_TIMEOUT_SECONDS _IOW('s', 0x00, __u32)
 
 #endif

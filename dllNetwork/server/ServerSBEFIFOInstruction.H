@@ -37,7 +37,8 @@ class ServerSBEFIFOInstruction : public SBEFIFOInstruction
     void sbefifo_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status);
     uint32_t sbefifo_close(Handle * handle);
     ssize_t sbefifo_submit(Handle * i_handle, ecmdDataBufferBase & o_data, InstructionStatus & o_status, uint32_t & o_reply_wordcount);
-    uint32_t sbefifo_set_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status);
+    uint32_t sbefifo_set_cmd_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status);
+    uint32_t sbefifo_set_read_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status);
 
     private:
     uint32_t fsi_open(Handle** handle, InstructionStatus & o_status);

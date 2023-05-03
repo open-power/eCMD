@@ -187,24 +187,26 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_close(Handle * handle)
 #endif
 }
 
-uint32_t ServerSBEFIFOInstruction::sbefifo_set_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status)
+uint32_t ServerSBEFIFOInstruction::sbefifo_set_cmd_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status)
 {
     uint32_t rc = 0;
     char errstr[200];
 
+    uint32_t l_timeoutInSeconds = (i_timeoutInSeconds > 120) ? 120 : i_timeoutInSeconds;
+
     if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
-        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d)\n", i_timeoutInSeconds);
+        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d)\n", l_timeoutInSeconds);
         o_status.errorMessage.append(errstr);
     }
 
 #ifdef TESTING
-    TEST_PRINT("ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d);\n", i_timeoutInSeconds);
+    TEST_PRINT("ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d);\n", l_timeoutInSeconds);
 #else
-    rc = ioctl(((adal_t*)i_handle)->fd, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, &i_timeoutInSeconds);
+    rc = ioctl(((adal_t*)i_handle)->fd, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, &l_timeoutInSeconds);
 
     if( rc && errno != ENOTTY )
     {
-        snprintf(errstr, 200, "ServerSBEFIFOInstruction::sbefifo_set_timeout Set timeout in seconds failed!\n");
+        snprintf(errstr, 200, "ServerSBEFIFOInstruction::sbefifo_set_cmd_timeout Set timeout in seconds failed!\n");
         o_status.errorMessage.append(errstr);
         rc = o_status.rc = SERVER_SBEFIFO_SET_TIMEOUT_FAIL;
     }
@@ -217,7 +219,46 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_set_timeout(Handle * i_handle, uint32
 #endif
 
     if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
-        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d) rc = %d, errno = %d\n", i_timeoutInSeconds, rc, errno);
+        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d) rc = %d, errno = %d\n", l_timeoutInSeconds, rc, errno);
+        o_status.errorMessage.append(errstr);
+    }
+
+    return rc;
+}
+
+uint32_t ServerSBEFIFOInstruction::sbefifo_set_read_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status)
+{
+    uint32_t rc = 0;
+    char errstr[200];
+
+    uint32_t l_timeoutInSeconds = (i_timeoutInSeconds > 120) ? 120 : i_timeoutInSeconds;
+
+    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_READ_TIMEOUT_SECONDS, %d)\n", l_timeoutInSeconds);
+        o_status.errorMessage.append(errstr);
+    }
+
+#ifdef TESTING
+    TEST_PRINT("ioctl(*handle, FSI_SBEFIFO_READ_TIMEOUT_SECONDS, %d);\n", l_timeoutInSeconds);
+#else
+    rc = ioctl(((adal_t*)i_handle)->fd, FSI_SBEFIFO_READ_TIMEOUT_SECONDS, &l_timeoutInSeconds);
+
+    if( rc && errno != ENOTTY )
+    {
+        snprintf(errstr, 200, "ServerSBEFIFOInstruction::sbefifo_set_read_timeout Set timeout in seconds failed!\n");
+        o_status.errorMessage.append(errstr);
+        rc = o_status.rc = SERVER_SBEFIFO_SET_TIMEOUT_FAIL;
+    }
+    else if( errno == ENOTTY )
+    {
+        // function not supported on server side, not sure we entirely care yet...
+        rc = 0;
+    }
+
+#endif
+
+    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+        snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_READ_TIMEOUT_SECONDS, %d) rc = %d, errno = %d\n", l_timeoutInSeconds, rc, errno);
         o_status.errorMessage.append(errstr);
     }
 
