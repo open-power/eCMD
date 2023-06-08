@@ -2,7 +2,7 @@
 #define _ServerFSIInstruction_H
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,10 +35,9 @@ class ServerFSIInstruction : public FSIInstruction
     protected:
     uint32_t scan_open(Handle ** handle, InstructionStatus & o_status);
     uint32_t scom_open(Handle ** handle, InstructionStatus & o_status);
-    uint32_t gp_reg_open(Handle ** handle, InstructionStatus & o_status);
-    uint32_t mbx_open(Handle ** handle, InstructionStatus & o_status);
-    uint32_t sbefifo_open(Handle ** handle, InstructionStatus & o_status);
+    uint32_t fsi_open(Handle ** handle, InstructionStatus & o_status);
 
+    protected:
     void scan_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status);
     void scom_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status);
     void gp_reg_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status);
@@ -47,10 +46,7 @@ class ServerFSIInstruction : public FSIInstruction
 
     uint32_t scan_close(Handle * handle);
     uint32_t scom_close(Handle * handle);
-    uint32_t gp_reg_close(Handle * handle);
-    uint32_t mbx_close(Handle * handle);
-    uint32_t sbefifo_close(Handle * handle);
-
+    uint32_t fsi_close(Handle * handle);
     ssize_t scan_write(Handle * i_handle, InstructionStatus & o_status);
     ssize_t scan_read(Handle * i_handle, ecmdDataBufferBase & o_data, InstructionStatus & o_status);
     ssize_t scom_write(Handle * i_handle, InstructionStatus & o_status, uint32_t i_index = 0);

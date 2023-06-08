@@ -21,6 +21,9 @@
 #include <OutputLite.H>
 #include <stdio.h>
 #include <errno.h>
+#include <sstream>
+#include <iomanip>
+#include <iterator>
 #include <adal_iic.h>
 #include <ecmdStructs.H>
 
@@ -77,6 +80,68 @@ system_iic * system_iic_open(const char * device, int flags)
     ret->fd = fd;
     return ret;
 }
+
+uint32_t ServerI2CInstruction::system_iic_fsi_open(Handle ** handle, InstructionStatus & o_status)
+{
+    uint32_t rc = 0;
+
+    char errstr[200];
+
+    /* already have a handle lets reuse it */
+    if(*handle != NULL)
+        return rc;
+
+    /* We need to open the device*/
+    if ((flags & INSTRUCTION_FLAG_DEVSTR) == 0) {
+        //ERROR
+        *handle = NULL;
+        snprintf(errstr, 200, "ServerFSIInstruction::fsi_open INSTRUCTION_FLAG_DEVSTR must be set\n");
+        o_status.errorMessage.append(errstr);
+        return SERVER_INVALID_FSI_DEVICE;
+    }
+
+    /* Figure out the slave device based on the deviceString */
+    std::istringstream iss;
+    iss.str(deviceString);
+    uint32_t l_idx = 0;
+    iss >> l_idx;
+
+    if ( (l_idx < 1) || (l_idx > 8) ) {
+        *handle = NULL;
+        snprintf(errstr, 200, "ServerFSIInstruction::fsi_open deviceString %s is not valid\n", deviceString.c_str());
+        o_status.errorMessage.append(errstr);
+        return SERVER_INVALID_FSI_DEVICE;
+    }
+
+    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+        snprintf(errstr, 200, "SERVER_DEBUG : adal_fsi_open()\n");
+        o_status.errorMessage.append(errstr);
+    }
+
+    *handle = (Handle *) adal_fsi_open(l_idx, O_RDWR | O_SYNC);
+
+    if (*handle == NULL) {
+        return SERVER_FSI_OPEN_FAIL;
+    }
+
+    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+        snprintf(errstr, 200, "SERVER_DEBUG : adal_fsi_open() opened = %s\n", (char *)((adal_t *)*handle)->priv);
+        o_status.errorMessage.append(errstr);
+    }
+
+    return rc;
+}
+
+uint32_t ServerI2CInstruction::system_iic_fsi_close(Handle * i_handle)
+{
+#ifdef TESTING
+    TEST_PRINT("adal_base_close((adal_t *) handle);\n");
+    return 0;
+#else
+    return adal_base_close((adal_t *) i_handle);
+#endif
+}
+
 
 void system_iic_close(system_iic * handle)
 {
@@ -363,6 +428,12 @@ uint32_t ServerI2CInstruction::iic_config_slave_address(Handle * i_handle, Instr
         system_iic * handle = (system_iic *) i_handle;
         if ( (handle->funcs & I2C_FUNC_10BIT_ADDR) == I2C_FUNC_10BIT_ADDR )
         {
+            
+            if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+                char errstr[200];
+                snprintf(errstr, 200, "SERVER_DEBUG : iic_config_slave_address() I2C_TENBIT enabled\n");
+                o_status.errorMessage.append(errstr);
+            }
             rc = ioctl(handle->fd, I2C_TENBIT, 1);
             if ( rc ) return rc;
             handle->slave_address = slaveAddress;
@@ -609,6 +680,7 @@ ssize_t ServerI2CInstruction::iic_read(Handle * i_handle, ecmdDataBufferBase & o
             uint32_t tmpbytes = ((msgMax*(idx+1)) > bytes) ? bytes - (msgMax*idx) : msgMax;
             rdwr_data->msgs[msg_offset].len = tmpbytes;
             rdwr_data->msgs[msg_offset].buf = new uint8_t[tmpbytes];
+            bzero(rdwr_data->msgs[msg_offset].buf, tmpbytes);
 
             msg_offset++;
         }
@@ -619,7 +691,16 @@ ssize_t ServerI2CInstruction::iic_read(Handle * i_handle, ecmdDataBufferBase & o
             o_status.errorMessage.append(errstr);
             for( uint32_t msgidx=0; msgidx < messages; msgidx++)
             {
-                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf...\n", msgidx, rdwr_data->msgs[msgidx].addr, rdwr_data->msgs[msgidx].flags, rdwr_data->msgs[msgidx].len);
+                std::vector<std::string> bufdata;
+                for( uint32_t bufidx=0; msgidx == 0 && bufidx < 16 && bufidx < rdwr_data->msgs[msgidx].len; bufidx++ )
+                {
+                    std::ostringstream oss;
+                    oss << std::hex << std::setfill('0') << std::setw(2) << unsigned(rdwr_data->msgs[msgidx].buf[bufidx]);
+                    bufdata.push_back(oss.str());
+                }
+                std::ostringstream bufdatajoined;
+                std::copy(bufdata.begin(), bufdata.end(), std::ostream_iterator<std::string>(bufdatajoined, " "));
+                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf %s\n", msgidx, rdwr_data->msgs[msgidx].addr, rdwr_data->msgs[msgidx].flags, rdwr_data->msgs[msgidx].len, bufdatajoined.str().c_str());
                 o_status.errorMessage.append(errstr);
             }
         }
@@ -736,7 +817,16 @@ ssize_t ServerI2CInstruction::iic_write(Handle * i_handle, InstructionStatus & o
             o_status.errorMessage.append(errstr);
             for( uint32_t idx=0; idx < messages; idx++)
             {
-                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf...\n", idx, rdwr_data->msgs[idx].addr, rdwr_data->msgs[idx].flags, rdwr_data->msgs[idx].len);
+                std::vector<std::string> bufdata;
+                for( uint32_t bufidx=0; idx == 0 && bufidx < 16 && bufidx < rdwr_data->msgs[idx].len; bufidx++ )
+                {
+                    std::ostringstream oss;
+                    oss << std::hex << std::setfill('0') << std::setw(2) << unsigned(rdwr_data->msgs[idx].buf[bufidx]);
+                    bufdata.push_back(oss.str());
+                }
+                std::ostringstream bufdatajoined;
+                std::copy(bufdata.begin(), bufdata.end(), std::ostream_iterator<std::string>(bufdatajoined, " "));
+                snprintf(errstr, 200, "SERVER_DEBUG : rdwr_data[%d] - addr(0x%X) flag(%X) bytes(%d) buf %s\n", idx, rdwr_data->msgs[idx].addr, rdwr_data->msgs[idx].flags, rdwr_data->msgs[idx].len, bufdatajoined.str().c_str());
                 o_status.errorMessage.append(errstr);
             }
         }
@@ -822,7 +912,11 @@ uint32_t ServerI2CInstruction::iic_reset(Handle * i_handle, ResetType i_type)
         TESTPRINT("rc = system_iic_reset((adal_t *) handle, l_type);\n");
 #else
         // disabling calling system_iic_reset 
-        //rc = system_iic_reset( i_handle, l_type );
+        //Handle * l_fsiHandle = NULL;
+        //rc = system_iic_fsi_open(&l_fsiHandle, o_status);
+        //if( l_fsiHandle != NULL )
+        //  rc = system_iic_reset( i_handle, l_type );
+        //rc = system_iic_fsi_close(l_fsiHandle);
 #endif
 
         if (rc < 0 && l_type == ADAL_RESET_FULL)

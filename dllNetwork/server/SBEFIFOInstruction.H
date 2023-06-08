@@ -2,7 +2,7 @@
 #define _SBEFIFOInstruction_H
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,10 +58,10 @@ class SBEFIFOInstruction : public Instruction {
      * @brief Used as alternate way to set variables normally set on construction
      * @retval ECMD_SUCCESS on success
      * @retval nonzero on failure
-     * @post command, deviceString, timeout, replyLength and flags are set, if i_data is not NULL it is copied to data
+     * @post command, deviceString, timeout, replyLength and flags are set, if i_data is not NULL it is copied to data, if i_port is not UINT32_MAX it is copied to port
      * @post flag has INSTRUCTION_FLAG_DEVSTR set
      */
-    virtual uint32_t setup(InstructionCommand i_command, std::string &i_deviceString, uint32_t i_timeout, uint32_t i_replyLength, uint32_t i_flags, ecmdDataBuffer * i_data = NULL);
+    virtual uint32_t setup(InstructionCommand i_command, std::string &i_deviceString, uint32_t i_timeout, uint32_t i_replyLength, uint32_t i_flags, ecmdDataBuffer * i_data = NULL, uint32_t i_port = UINT32_MAX);
     //@}
 
     /** @name Execution Function */
@@ -159,11 +159,14 @@ class SBEFIFOInstruction : public Instruction {
     std::string deviceString;
     uint32_t timeout;
     uint32_t replyLength;
+    uint32_t port;
 
     virtual uint32_t sbefifo_open(Handle ** handle, InstructionStatus & o_status) { return -1; }
     virtual void sbefifo_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status) { }
     virtual uint32_t sbefifo_close(Handle * handle) { return -1; }
     virtual ssize_t sbefifo_submit(Handle * i_handle, ecmdDataBufferBase & o_data, InstructionStatus & o_status, uint32_t & o_reply_wordcount) { return -1; }
+    virtual uint32_t sbefifo_set_cmd_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status) { return -1; }
+    virtual uint32_t sbefifo_set_read_timeout(Handle * i_handle, uint32_t i_timeoutInSeconds, InstructionStatus & o_status) { return -1; }
 
 };
 

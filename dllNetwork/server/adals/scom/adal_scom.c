@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,6 @@
 #include <sys/ioctl.h>
 #include "adal_scom.h"
 #include "../fsi.h"
-
-static const uint32_t fsirawSize = 4;
-static const char *fsiraw[4] = {"/sys/class/fsi-master/fsi0/slave@00:00/raw",            // newest
-                                "/sys/devices/platform/gpio-fsi/fsi0/slave@00:00/raw",
-                                "/sys/devices/platform/fsi-master/slave@00:00/raw",   
-                                "/sys/bus/platform/devices/fsi-master/slave@00:00/raw"}; // oldest
 
 #define container_of(ptr, type, member) ({                      \
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
@@ -68,7 +62,6 @@ enum SCOM_REGS {
 
 struct adal_scom {
 	adal_t adal;
-	uint32_t offset;
 	bool has_ioctl;
 };
 typedef struct adal_scom adal_scom_t;
@@ -99,9 +92,6 @@ static void adal_scom_make_status(struct scom_access *acc, unsigned long *status
 
 adal_t * adal_scom_open(const char * device, int flags)
 {
-	int idx = 1;
-	char *str;
-	char *prev = NULL;
 	adal_scom_t *scom;
 
 	scom = (adal_scom_t *)malloc(sizeof(*scom));
@@ -118,27 +108,11 @@ adal_t * adal_scom_open(const char * device, int flags)
 		return NULL;
 	}
 
-	str = strstr((char *)device, "scom");
-	while (str) {
-		prev = str;
-		str = strstr(str + 1, "scom");
-	}
-
-	if (prev)
-		idx = strtol(prev + 4, NULL, 10);
-
-	if (idx > 1) {
-                // need to hit into the p2,p3...p7 etc, not just p1
-                // (-2) here due to scom2 being for p1 and should be only P1_SLAVE_OFFSET
-                // scom3 would be for p2 and be the next jump (3-2) * PX_SLAVE_OFFSET
-                // Jump to p1 is not the same as jump to p2,p3,p4, etc, to this is only done for p1 and later
-		scom->offset = P1_SLAVE_OFFSET + ((idx-2) * PX_SLAVE_OFFSET);
-        }
-
-        // removing ioctl work here as its not working properly to reset.
-	//rc = ioctl(scom->adal.fd, FSI_SCOM_CHECK, &check);
-	//if (rc == 0 && (check & SCOM_CHECK_SUPPORTED))
-	//	scom->has_ioctl = true;
+    // checking if ioctl works here 
+	uint32_t check = 0;
+	int rc = ioctl(scom->adal.fd, FSI_SCOM_CHECK, &check);
+	if (rc == 0 && (check & SCOM_CHECK_SUPPORTED))
+		scom->has_ioctl = true;
 
 	return &scom->adal;
 }
@@ -267,7 +241,7 @@ ssize_t adal_scom_write(adal_t * adal, void * buf, uint64_t scom_address,  unsig
 	return 8;
 }
 
-int adal_scom_reset(adal_t * adal, scom_adal_reset_t type)
+int adal_scom_reset_with_fsi(adal_t * adal, adal_t * adal_fsi, scom_adal_reset_t type)
 {
 	adal_scom_t *scom = to_scom_adal(adal);
 	__u32 reset_type;
@@ -287,10 +261,11 @@ int adal_scom_reset(adal_t * adal, scom_adal_reset_t type)
 	if (scom->has_ioctl) {
 		rc = ioctl(adal->fd, FSI_SCOM_RESET, &reset_type);
 	} else {
+		// use the raw fsi device here.
 		if (reset_type & SCOM_RESET_PIB)
-			rc = adal_scom_set_register(adal, RESET, 0xFFFFFFFF);
+			rc = adal_scom_set_register(adal_fsi, RESET, 0xFFFFFFFF);
 		if (reset_type & SCOM_RESET_INTF)
-			rc = adal_scom_set_register(adal, FSI2PIB_RESET, 0xFFFFFFFF);
+			rc = adal_scom_set_register(adal_fsi, FSI2PIB_RESET, 0xFFFFFFFF);
 	}
 
 	return rc;
@@ -350,72 +325,38 @@ int adal_scom_ffdc_unlock(adal_t * adal, int scope)
 	return 0;
 }
 
-
+/* this method expects the adal to be opened against the raw fsi device for this target */
 ssize_t adal_scom_get_register(adal_t *adal, int registerNo,
 			       unsigned long *data)
 {
-
 	int rc;
-        int fd = 0;
-        uint32_t fsiIdx = 0;
-        for (fsiIdx=0; fsiIdx < fsirawSize; fsiIdx++ )
-        {
-                // try an open to find a valid file
-                fd = open(fsiraw[fsiIdx], O_RDONLY);
-                if (fd != -1)
-                {
-                        break;
-                }
-                close(fd);
-        } 
-	adal_scom_t *scom = to_scom_adal(adal);
+    
+	lseek(adal->fd, SCOM_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
+	rc = read(adal->fd, data, 4);
 
-	if (fd == -1)
-		return -ENODEV;
-
-	lseek(fd, scom->offset + SCOM_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
-	rc = read(fd, data, 4);
-
-        if (adal_is_byte_swap_needed())
-        {
-                // based on device and openbmc version we know the driver is not swapping endianess
-                (*data) = ntohl((*data));
-        }
+	if (adal_is_byte_swap_needed())
+	{
+		// based on device and openbmc version we know the driver is not swapping endianess
+		(*data) = ntohl((*data));
+	}
 	
-	close(fd);
 	return rc;
 }
 
+/* this method expects the adal to be opened against the raw fsi device for this target */
 ssize_t adal_scom_set_register(adal_t *adal, int registerNo,
 			       unsigned long data)
 {
 	int rc;
-        int fd = 0;
-        uint32_t fsiIdx = 0;
-        for (fsiIdx=0; fsiIdx < fsirawSize; fsiIdx++ )
-        {
-                // try an open to find a valid file
-                fd = open(fsiraw[fsiIdx], O_WRONLY);
-                if (fd != -1)
-                {
-                        break;
-                }
-                close(fd);
-        } 
-	adal_scom_t *scom = to_scom_adal(adal);
 
-	if (fd == -1)
-		return -ENODEV;
-
-	lseek(fd, scom->offset + SCOM_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
-        if (adal_is_byte_swap_needed())
-        {
-                // based on device and openbmc version we know the driver is not swapping endianess
-                data = htonl(data);
-        }
+	lseek(adal->fd, SCOM_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
+	if (adal_is_byte_swap_needed())
+	{
+		// based on device and openbmc version we know the driver is not swapping endianess
+		data = htonl(data);
+	}
 	
-	rc = write(fd, &data, 4);
+	rc = write(adal->fd, &data, 4);
 	
-	close(fd);
 	return rc;
 }
