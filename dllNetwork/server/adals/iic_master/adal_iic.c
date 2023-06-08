@@ -32,7 +32,7 @@
 #include <stddef.h>
 #include <arpa/inet.h>
 
-#define IIC_ENGINE_OFFSET	0x1800
+#define ADAL_IIC_ENGINE_OFFSET	0x1800
 
 /*
  * Secure IIC
@@ -45,60 +45,17 @@
 
 #define SIIC_MK_OFFSET(t) (((t) << 8) | ((~(t)) & 0x000000ff))
 
-/******************************************************************************
- */
-
-#define container_of(ptr, type, member) ({                      \
-	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-	(type *)( (char *)__mptr - offsetof(type,member) );})
-
-static const uint32_t fsirawSize = 4;
-static const char *fsiraw[4] = {"/sys/class/fsi-master/fsi0/slave@00:00/raw",            // newest
-                                "/sys/devices/platform/gpio-fsi/fsi0/slave@00:00/raw",
-                                "/sys/devices/platform/fsi-master/slave@00:00/raw",   
-                                "/sys/bus/platform/devices/fsi-master/slave@00:00/raw"}; // oldest
-
-struct adal_iic {
-	adal_t adal;
-	uint32_t offset;
-};
-typedef struct adal_iic adal_iic_t;
-
-#define to_iic_adal(x) container_of((x), struct adal_iic, adal)
+/*******************************************************************************/
 
 
 adal_t *adal_iic_open(const char *device, int flags)
 {
-	adal_t * adal = NULL;
-
-	adal = (adal_t *)malloc(sizeof(*adal));
-	if (adal == NULL) {
-		return NULL;
-	}
-
-	adal->fd = open(device, flags);
-	if (adal->fd == -1) {
-		free(adal);
-		adal = NULL;
-	}
-
-	return adal;
+	return adal_base_open(device, flags);
 }
 
 int adal_iic_close(adal_t * adal)
 {
-	int rc = 0;
-
-	if (!adal)
-		return 0;
-  //free(adal->priv);
-  //adal->priv = NULL;
-	rc = close(adal->fd);
-
-	free(adal);
-	adal = NULL;
-
-	return rc;
+	return adal_base_close(adal);
 }
 
 ssize_t adal_iic_read(adal_t * adal, void * buf, size_t count)
@@ -207,32 +164,15 @@ exit:
     return rc;
 }
 
-
-
+/* this method expects the adal to be opened against the raw fsi device for this target */
 ssize_t adal_iic_get_register(adal_t *adal, int registerNo,
 			       unsigned long *data)
 {
 
 	int rc;
-        int fd = 0;
-        uint32_t fsiIdx = 0;
-        for (fsiIdx=0; fsiIdx < fsirawSize; fsiIdx++ )
-        {
-                // try an open to find a valid file
-                fd = open(fsiraw[fsiIdx], O_RDONLY);
-                if (fd != -1)
-                {
-                        break;
-                }
-                close(fd);
-        } 
-	adal_iic_t *iic = to_iic_adal(adal);
-
-	if (fd == -1)
-		return -ENODEV;
-
-	lseek(fd, iic->offset + IIC_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
-	rc = read(fd, data, 4);
+   
+	lseek(adal->fd, ADAL_IIC_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
+	rc = read(adal->fd, data, 4);
 
         if (adal_is_byte_swap_needed())
         {
@@ -240,41 +180,24 @@ ssize_t adal_iic_get_register(adal_t *adal, int registerNo,
                 (*data) = ntohl((*data));
         }
 	
-	close(fd);
 	return rc;
 }
 
+/* this method expects the adal to be opened against the raw fsi device for this target */
 ssize_t adal_iic_set_register(adal_t *adal, int registerNo,
 	                        unsigned long data)
 {
 	int rc;
-        int fd = 0;
-        uint32_t fsiIdx = 0;
-        for (fsiIdx=0; fsiIdx < fsirawSize; fsiIdx++ )
-        {
-                // try an open to find a valid file
-                fd = open(fsiraw[fsiIdx], O_WRONLY);
-                if (fd != -1)
-                {
-                        break;
-                }
-                close(fd);
-        } 
-	adal_iic_t *iic = to_iic_adal(adal);
-
-	if (fd == -1)
-		return -ENODEV;
-
-	lseek(fd, iic->offset + IIC_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
-        if (adal_is_byte_swap_needed())
-        {
-                // based on device and openbmc version we know the driver is not swapping endianess
-                data = htonl(data);
-        }
+        
+	lseek(adal->fd, ADAL_IIC_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
+	if (adal_is_byte_swap_needed())
+	{
+			// based on device and openbmc version we know the driver is not swapping endianess
+			data = htonl(data);
+	}
 	
-	rc = write(fd, &data, 4);
+	rc = write(adal->fd, &data, 4);
 	
-	close(fd);
 	return rc;
 }
 

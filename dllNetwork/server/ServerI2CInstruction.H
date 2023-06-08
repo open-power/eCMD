@@ -48,6 +48,10 @@ class ServerI2CInstruction : public I2CInstruction
     uint32_t iic_reset(Handle * i_handle, ResetType i_type);
 
     private:
+    uint32_t system_iic_fsi_open(Handle ** handle, InstructionStatus & o_status);
+    uint32_t system_iic_fsi_close(Handle * i_handle);
+
+    private:
     uint32_t iv_deviceIdx;
     uint32_t iv_adalFsiDevice;
     std::vector<std::string> iv_devicePaths;

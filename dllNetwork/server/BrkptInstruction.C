@@ -387,6 +387,11 @@ void BrkptInstruction::unpackReturnData(const ecmdDataBuffer & i_data, std::list
         o_brkptTableEntries.back().unflatten(l_data, l_entry_flat_size);
         delete [] l_data;
         word_offset += l_entry_flat_size / sizeof(uint32_t);
+        // backwards compatibility handling here
+        // Old way:  word_offset in pack would overwrite end of flattened object
+        // New way:  word align everything, if flattened object isn't word aligned, make it so
+        if ( o_brkptTableEntries.back().flattenSize() == l_entry_flat_size ) // condition to handle backwards compatibility (is this enough) 
+            if ( l_entry_flat_size % 4 ) word_offset++;   // l_entry_flat_size is not word bound, needs to be, bump if we are not word bound.
     }
 }
 
@@ -408,6 +413,11 @@ void BrkptInstruction::unpackReturnData(const ecmdDataBuffer & i_data, std::list
         o_events.back().unflatten(l_data, l_entry_flat_size);
         delete [] l_data;
         word_offset += l_entry_flat_size / sizeof(uint32_t);
+        // backwards compatibility handling here
+        // Old way:  word_offset in pack would overwrite end of flattened object
+        // New way:  word align everything, if flattened object isn't word aligned, make it so
+        if ( o_events.back().flattenSize() == l_entry_flat_size ) // condition to handle backwards compatibility (is this enough) 
+            if ( l_entry_flat_size % 4 ) word_offset++;   // l_entry_flat_size is not word bound, needs to be, bump if we are not word bound.
     }
 }
 
@@ -426,6 +436,10 @@ static void packReturnData(const ecmdDataBuffer & i_virtualAddress, const std::l
         // byte size of element n (word)
         l_list_flat_size += entry->flattenSize();
         // data for element n
+        if (l_list_flat_size % 4)  // 4 bytes in a word, modify word boundary if not 0 here.   0 means we're on a word boundary
+        {
+            l_list_flat_size += (4 - (l_list_flat_size % 4));  // add number of bytes to make this a word boundary
+        }
     }
     uint32_t total_size = (2 + l_list_size) * sizeof(uint32_t);
     total_size += l_virtualAddress_flat_size;
@@ -459,6 +473,7 @@ static void packReturnData(const ecmdDataBuffer & i_virtualAddress, const std::l
         o_data.insert(l_data, word_offset * 32, l_entry_flat_size * 8);
         delete [] l_data;
         word_offset += l_entry_flat_size / sizeof(uint32_t);
+        if ( l_entry_flat_size % 4 ) word_offset++;   // l_entry_flat_size is not word bound, needs to be, bump if we are not word bound.
     }
 }
 
@@ -474,6 +489,10 @@ static void packReturnData(const std::list<cipSoftwareEvent_t> & i_events, ecmdD
         // byte size of element n (word)
         l_list_flat_size += entry->flattenSize();
         // data for element n
+        if (l_list_flat_size % 4)  // 4 bytes in a word, modify word boundary if not 0 here.   0 means we're on a word boundary
+        {
+            l_list_flat_size += (4 - (l_list_flat_size % 4));  // add number of bytes to make this a word boundary
+        }
     }
     uint32_t total_size = (1 + l_list_size) * sizeof(uint32_t);
     total_size += l_list_flat_size;
@@ -497,5 +516,6 @@ static void packReturnData(const std::list<cipSoftwareEvent_t> & i_events, ecmdD
         o_data.insert(l_data, word_offset * 32, l_entry_flat_size * 8);
         delete [] l_data;
         word_offset += l_entry_flat_size / sizeof(uint32_t);
+        if ( l_entry_flat_size % 4 ) word_offset++;   // l_entry_flat_size is not word bound, needs to be, bump if we are not word bound.
     }
 }

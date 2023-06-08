@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,15 +31,7 @@
 
 extern bool global_server_debug;
 
-//FIXME remove these
-adal_t * system_gp_reg_open(const char * device, int flags, int type)
-{
-    return adal_mbx_open(device, flags);
-}
-int system_gp_reg_close(adal_t * adal)
-{
-    return adal_mbx_close(adal);
-}
+
 ssize_t system_gp_reg_get(adal_t * adal, unsigned long offset, uint32_t * data)
 {
     ssize_t rc = adal_mbx_get_register(adal, offset, data);
@@ -150,91 +142,20 @@ uint32_t ServerFSIInstruction::scom_open(Handle** handle, InstructionStatus & o_
   return rc;
 }
 
-uint32_t ServerFSIInstruction::gp_reg_open(Handle** handle, InstructionStatus & o_status) {
+uint32_t ServerFSIInstruction::fsi_open(Handle** handle, InstructionStatus & o_status) {
   uint32_t rc = 0;
 
-  char device[100];
   char errstr[200];
 
   /* already have a handle lets reuse it */
   if(*handle != NULL)
     return rc;
-
-  /* We need to open the device*/
-  if (flags & INSTRUCTION_FLAG_DEVSTR) {
-    //snprintf(device, 50, "/dev/mbx%s", deviceString.c_str());
-    snprintf(device, 100, "/sys/bus/platform/devices/fsi-master/slave@00:00/raw");
-  } else {
-    //ERROR
-    *handle = NULL;
-    snprintf(errstr, 200, "ServerFSIInstruction::gp_reg_open INSTRUCTION_FLAG_DEVSTR must be set\n");
-    o_status.errorMessage.append(errstr);
-    return SERVER_INVALID_FSI_DEVICE;
-  }
-  errno = 0;
-
-  if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
-    snprintf(errstr, 200, "SERVER_DEBUG : system_gp_reg_open(%s, O_RDWR | O_SYNC, EDAL_GP_TYPE_MBX)\n", device);
-    o_status.errorMessage.append(errstr);
-  }
-
-#ifdef TESTING
-  TEST_PRINT("*handle = system_gp_reg_open(%s, O_RDWR | O_SYNC, EDAL_GP_TYPE_MBX);\n", device);
-  *handle = (Handle *) 0x1;
-#else
-  *handle = (Handle *) system_gp_reg_open(device, O_RDWR | O_SYNC, EDAL_GP_TYPE_MBX);
-#endif
-
-  if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
-    snprintf(errstr, 200, "SERVER_DEBUG : system_gp_reg_open() *handle = %p\n", *handle);
-    o_status.errorMessage.append(errstr);
-  }
-
-  if (*handle == NULL) {
-    snprintf(errstr, 200, "ServerFSIInstruction::gp_reg_open Problem opening FSI device %s : errno %d\n", device, errno);
-    o_status.errorMessage.append(errstr);
-    return SERVER_INVALID_FSI_DEVICE;
-  }
-
-  return rc;
-}
-
-uint32_t ServerFSIInstruction::mbx_open(Handle** handle, InstructionStatus & o_status) {
-  uint32_t rc = 0;
-
-  char device[100];
-  char errstr[200];
-
-  /* already have a handle lets reuse it */
-  if(*handle != NULL)
-    return rc;
-
-  const uint32_t numPaths = 5;
-  const char * devices[9][5] = {
-    {"", "", "", "", ""},
-    {"/sys/class/fsi-master/fsi0/slave@00:00/raw",
-     "/sys/devices/platform/gpio-fsi/fsi0/slave@00:00/raw",
-     "/sys/devices/platform/fsi-master/slave@00:00/raw",
-     "/sys/bus/platform/devices/fsi-master/slave@00:00/raw",
-     ""},
-    {"/sys/class/fsi-master/fsi1/slave@01:00/raw",
-     "/sys/class/fsi-master/fsi0/slave@00:00/00:00:00:0a/fsi-master/fsi1/slave@01:00/raw",
-     "/sys/devices/platform/gpio-fsi/fsi0/slave@00:00/00:00:00:0a/fsi1/slave@01:00/raw",
-     "/sys/devices/platform/fsi-master/slave@00:00/hub@00/slave@01:00/raw",
-     "/sys/devices/hub@00/slave@01:00/raw"},
-    {"/sys/class/fsi-master/fsi1/slave@02:00/raw", "", "", "", ""},
-    {"/sys/class/fsi-master/fsi1/slave@03:00/raw", "", "", "", ""},
-    {"/sys/class/fsi-master/fsi1/slave@04:00/raw", "", "", "", ""},
-    {"/sys/class/fsi-master/fsi1/slave@05:00/raw", "", "", "", ""},
-    {"/sys/class/fsi-master/fsi1/slave@06:00/raw", "", "", "", ""},
-    {"/sys/class/fsi-master/fsi1/slave@07:00/raw", "", "", "", ""}};
-  int errnos[5] = { 0, 0, 0, 0, 0 };
 
   /* We need to open the device*/
   if ((flags & INSTRUCTION_FLAG_DEVSTR) == 0) {
     //ERROR
     *handle = NULL;
-    snprintf(errstr, 200, "ServerFSIInstruction::mbx_open INSTRUCTION_FLAG_DEVSTR must be set\n");
+    snprintf(errstr, 200, "ServerFSIInstruction::fsi_open INSTRUCTION_FLAG_DEVSTR must be set\n");
     o_status.errorMessage.append(errstr);
     return SERVER_INVALID_FSI_DEVICE;
   }
@@ -247,99 +168,28 @@ uint32_t ServerFSIInstruction::mbx_open(Handle** handle, InstructionStatus & o_s
 
   if ( (l_idx < 1) || (l_idx > 8) ) {
     *handle = NULL;
-    snprintf(errstr, 200, "ServerFSIInstruction::mbx_open deviceString %s is not valid\n", deviceString.c_str());
+    snprintf(errstr, 200, "ServerFSIInstruction::fsi_open deviceString %s is not valid\n", deviceString.c_str());
     o_status.errorMessage.append(errstr);
     return SERVER_INVALID_FSI_DEVICE;
   }
 
-  for (uint32_t l_try = 0; l_try < numPaths; l_try++) {
-    /* Validate and adjust the device string for the device to open */
-    snprintf(device, 100, "%s", devices[l_idx][l_try]);
-    if ( strlen(device) == 0 ) continue;
-
-    errno = 0;
-
-    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
-      snprintf(errstr, 200, "SERVER_DEBUG : adal_mbx_open(%s, O_RDWR | O_SYNC)\n", device);
-      o_status.errorMessage.append(errstr);
-    }
-
-#ifdef TESTING
-    TEST_PRINT("*handle = adal_mbx_open(%s, O_RDWR | O_SYNC);\n", device);
-    *handle = (Handle *) 0x1;
-#else
-    *handle = (Handle *) adal_mbx_open(device, O_RDWR | O_SYNC);
-#endif
-
-    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
-      snprintf(errstr, 200, "SERVER_DEBUG : adal_mbx_open() *handle = %p\n", *handle);
-      o_status.errorMessage.append(errstr);
-    }
-
-    if (*handle == NULL) {
-      // suppress errors being appended to the o_status
-      errnos[l_try] = errno;
-    } else {
-      break;
-    }
+  if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+    snprintf(errstr, 200, "SERVER_DEBUG : adal_fsi_open()\n");
+    o_status.errorMessage.append(errstr);
   }
 
+  *handle = (Handle *) adal_fsi_open(l_idx, O_RDWR | O_SYNC);
+
   if (*handle == NULL) {
-    // exhausted all file paths to find a valid device, tell the user what we tried for FA
-    for ( uint32_t l_try = 0; l_try < numPaths; l_try++ )
-    {
-      // print all paths we tried
-      snprintf(errstr, 200, "ServerFSIInstruction::mbx_open Problem opening FSI device %s : errno %d\n", devices[l_idx][l_try], errnos[l_try]);
-      o_status.errorMessage.append(errstr);
-    }
-    return SERVER_INVALID_FSI_DEVICE;
+    return SERVER_FSI_OPEN_FAIL;
+  }
+
+  if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
+    snprintf(errstr, 200, "SERVER_DEBUG : adal_fsi_open() opened = %s\n", (char *)((adal_t *)*handle)->priv);
+    o_status.errorMessage.append(errstr);
   }
 
   return rc;
-}
-
-uint32_t ServerFSIInstruction::sbefifo_open(Handle ** handle, InstructionStatus & o_status)
-{
-    int rc = 0;
-
-    char device[50];
-    char errstr[200];
-
-    /* already have a handle lets reuse it */
-    if(*handle != NULL)
-        return rc;
-
-    /* We need to open the device*/
-    snprintf(device, 50, "/dev/sbefifo%s", deviceString.c_str());
-    errno = 0;
-
-    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG)
-    {
-        snprintf(errstr, 200, "SERVER_DEBUG : adal_sbefifo_open(%s, O_RDWR | O_NONBLOCK)\n", device);
-        o_status.errorMessage.append(errstr);
-    }
-
-#ifdef TESTING
-    TEST_PRINT("*handle = adal_sbefifo_open(%s, O_RDWR | O_NONBLOCK);\n", device);
-    *handle = (Handle *) 0x1;
-#else
-    *handle = (Handle *) adal_sbefifo_open(device, O_RDWR | O_NONBLOCK);
-#endif
-
-    if (flags & INSTRUCTION_FLAG_SERVER_DEBUG)
-    {
-        snprintf(errstr, 200, "SERVER_DEBUG : adal_sbefifo_open() *handle = %p\n", *handle);
-        o_status.errorMessage.append(errstr);
-    }
-
-    if (*handle == NULL)
-    {
-        snprintf(errstr, 200, "ServerFSIInstruction::sbefifo_open Problem opening SBEFIFO device %s : errno %d\n", device, errno);
-        o_status.errorMessage.append(errstr);
-        return SERVER_INVALID_SBEFIFO_DEVICE;
-    }
-
-    return rc;
 }
 
 void ServerFSIInstruction::scan_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status) {
@@ -357,15 +207,19 @@ void ServerFSIInstruction::scan_ffdc_and_reset(Handle ** handle, InstructionStat
 void ServerFSIInstruction::scom_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status) {
 
     uint32_t rc = 0;
-    // system_scom_ffdc_extract
+        // system_scom_ffdc_extract
     //  append to o_status.errorMessage
     // system_scom_ffdc_unlock
-    if (global_server_debug) printf("calling adal_scom_reset()\n");
+    if (global_server_debug) printf("calling adal_scom_reset_with_fsi()\n");
 #ifdef TESTING
-    TEST_PRINT("adal_scom_reset((adal_t *) *handle, SCOMRESETENGINE);\n");
+    TEST_PRINT("adal_scom_reset_with_fsi((adal_t *) *handle, SCOMRESETENGINE);\n");
     rc = 0;
 #else
-    rc = adal_scom_reset((adal_t *) *handle, SCOMRESETENGINE);
+    Handle * l_fsiHandle = NULL;
+    rc = fsi_open(&l_fsiHandle, o_status);
+    if( l_fsiHandle != NULL )
+        rc = adal_scom_reset_with_fsi((adal_t *) *handle, (adal_t *) l_fsiHandle, SCOMRESETENGINE);
+    rc = fsi_close(l_fsiHandle);
 #endif
 
     rc = scom_close(*handle);
@@ -375,55 +229,25 @@ void ServerFSIInstruction::scom_ffdc_and_reset(Handle ** handle, InstructionStat
 
 void ServerFSIInstruction::gp_reg_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status) {
 
-    // system_gp_reg_ffdc_extract
-    //  append to o_status.errorMessage
-    // system_gp_reg_ffdc_unlock
-    // system_gp_reg_reset -- may not be available
-
-    uint32_t rc = gp_reg_close(*handle);
+    uint32_t rc = fsi_close(*handle);
     *handle = NULL;
-    if (rc) o_status.rc = SERVER_SCOM_CLOSE_FAIL;
-
+    if (rc) o_status.rc = SERVER_FSI_CLOSE_FAIL;
 }
 
 void ServerFSIInstruction::mbx_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status) {
 
-    // system_mbx_ffdc_extract
-    //  append to o_status.errorMessage
-    // system_mbx_ffdc_unlock
-    // system_mbx_reset
-
-    uint32_t rc = mbx_close(*handle);
+    uint32_t rc = fsi_close(*handle);
     *handle = NULL;
-    if (rc) o_status.rc = SERVER_SCOM_CLOSE_FAIL;
-
+    if (rc) o_status.rc = SERVER_FSI_CLOSE_FAIL;
 }
 
 void ServerFSIInstruction::sbefifo_ffdc_and_reset(Handle ** handle, InstructionStatus & o_status)
 {
     uint32_t rc = 0;
-    // system_sbefifo_ffdc_extract
-    //  append to o_status.errorMessage
-    // system_sbefifo ffdc_unlock
 
-    if (flags & INSTRUCTION_FLAG_SBEFIFO_RESET_ENABLE) {
-        errno = 0;
-#ifdef TESTING
-        TEST_PRINT("adal_sbefifo_request_reset(*handle);\n");
-#else
-        rc = adal_sbefifo_request_reset((adal_t *) *handle);
-#endif
-        if (rc) {
-            char errstr[200];
-            snprintf(errstr, 200, "ServerFSIInstruction::sbefifo_ffdc_and_reset Reset of adal failed!\n");
-            o_status.errorMessage.append(errstr);
-            o_status.rc = SERVER_SBEFIFO_ADAL_RESET_FAIL;
-        }
-    }
-
-    rc = sbefifo_close(*handle);
+    rc = fsi_close(*handle);
     *handle = NULL;
-    if (rc) o_status.rc = SERVER_SBEFIFO_CLOSE_FAIL;
+    if (rc) o_status.rc = SERVER_FSI_CLOSE_FAIL;
 }
 
 uint32_t ServerFSIInstruction::scan_close(Handle * handle)
@@ -446,33 +270,15 @@ uint32_t ServerFSIInstruction::scom_close(Handle * handle)
 #endif
 }
 
-uint32_t ServerFSIInstruction::gp_reg_close(Handle * handle)
-{
-#ifdef TESTING
-    TEST_PRINT("system_gp_reg_close((adal_t *) handle);\n");
-    return 0;
-#else
-    return system_gp_reg_close((adal_t *) handle);
-#endif
-}
 
-uint32_t ServerFSIInstruction::mbx_close(Handle * handle)
-{
-#ifdef TESTING
-    TEST_PRINT("adal_mbx_close((adal_t *) handle);\n");
-    return 0;
-#else
-    return adal_mbx_close((adal_t *) handle);
-#endif
-}
 
-uint32_t ServerFSIInstruction::sbefifo_close(Handle * handle)
+uint32_t ServerFSIInstruction::fsi_close(Handle * handle)
 {
 #ifdef TESTING
-    TEST_PRINT("adal_sbefifo_close((adal_t *) handle);\n");
+    TEST_PRINT("adal_base_close((adal_t *) handle);\n");
     return 0;
 #else
-    return adal_sbefifo_close((adal_t *) handle);
+    return adal_base_close((adal_t *) handle);
 #endif
 }
 
@@ -859,3 +665,4 @@ ssize_t ServerFSIInstruction::sbefifo_set_register(Handle * i_handle, Instructio
 #endif
         return rc;
 }
+

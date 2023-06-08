@@ -68,6 +68,16 @@ class XDMAInstruction : public Instruction {
      * @post version is set to 0x1
      */
     uint32_t setup(InstructionCommand i_command, std::string &i_deviceString, uint32_t i_address, uint32_t i_readLength, uint32_t i_msDelay, uint32_t i_flags, const ecmdDataBuffer * i_data = NULL);
+    
+    /**
+     * @brief Used as alternate way to set variables normally set on construction
+     * @retval ECMD_SUCCESS on success
+     * @retval nonzero on failure
+     * @post command, deviceString, address, msDelay and flags are set, if i_data is not NULL it is set to dat
+     * @post flag has INSTRUCTION_FLAG_DEVSTR set
+     * @post version is set to 0x1
+     */
+    uint32_t setup(InstructionCommand i_command, std::string &i_deviceString, uint32_t i_address, uint32_t i_msDelay, uint32_t i_flags, const ecmdDataBuffer * i_data = NULL);
     //@}
 
     /** @name Execution Function */
