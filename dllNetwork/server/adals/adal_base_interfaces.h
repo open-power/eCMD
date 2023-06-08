@@ -756,6 +756,9 @@ int adal_base_lctl(adal_t * adal, int type);
 /* based on the openbmc version */
 bool adal_is_byte_swap_needed(void);
 
+/* adal method to open a raw fsi device, shared across many adal implementations like sbefifo, scom, etc... */
+adal_t * adal_fsi_open(const uint32_t i_device, int i_flags);
+
 #ifdef __cplusplus
 }
 #endif

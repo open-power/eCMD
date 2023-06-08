@@ -2,7 +2,7 @@
 #define CRONUSRC_H /* define */
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,6 +140,8 @@
 #define SERVER_FSI_SHIFT_STREAM_NOT_SETUP              (ECMD_ERR_CRONUS | 0x401764)
 #define SERVER_FSI_SBEFIFO_READ_FAIL                   (ECMD_ERR_CRONUS | 0x401765)
 #define SERVER_FSI_SBEFIFO_WRITE_FAIL                  (ECMD_ERR_CRONUS | 0x401766)
+#define SERVER_FSI_OPEN_FAIL                           (ECMD_ERR_CRONUS | 0x401767)
+#define SERVER_FSI_CLOSE_FAIL                          (ECMD_ERR_CRONUS | 0x401768)
 
 
 #define SERVER_JTAG_GENERAL_ERROR                      (ECMD_ERR_CRONUS | 0x401800)
@@ -268,6 +270,8 @@
 #define SERVER_SBEFIFO_CLOSE_FAIL                      (ECMD_ERR_CRONUS | 0x401C01)
 #define SERVER_SBEFIFO_ADAL_RESET_FAIL                 (ECMD_ERR_CRONUS | 0x401C02)
 #define SERVER_SBEFIFO_SUBMIT_FAIL                     (ECMD_ERR_CRONUS | 0x401C03)
+#define SERVER_SBEFIFO_FFDC_UNLOCK_FAIL                (ECMD_ERR_CRONUS | 0x401C04)
+#define SERVER_SBEFIFO_SET_TIMEOUT_FAIL                (ECMD_ERR_CRONUS | 0x401C05)
 
 #define SERVER_MEMPROC_CHECK_ARGS_FAIL                 (ECMD_ERR_CRONUS | 0x401D00)
 #define SERVER_MEMPROC_CHECK_FBC_STATE_FAIL            (ECMD_ERR_CRONUS | 0x401D01)

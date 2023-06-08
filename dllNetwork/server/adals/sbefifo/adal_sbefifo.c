@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,63 +26,10 @@
 #include "adal_sbefifo.h"
 #include <delay.h>
 
-static const uint32_t fsirawSize = 4;
-static const char *fsiraw[4] = {"/sys/class/fsi-master/fsi0/slave@00:00/raw",            // newest
-                                "/sys/devices/platform/gpio-fsi/fsi0/slave@00:00/raw",
-                                "/sys/devices/platform/fsi-master/slave@00:00/raw",   
-                                "/sys/bus/platform/devices/fsi-master/slave@00:00/raw"}; // oldest
-
-
-#define container_of(ptr, type, member) ({                      \
-	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-	(type *)( (char *)__mptr - offsetof(type,member) );})
-
-#define SBEFIFO_ENGINE_OFFSET 0x2400
-#define P1_SLAVE_OFFSET       0x100000
-
-struct adal_sbefifo {
-        adal_t adal;
-        uint32_t offset;
-};
-typedef struct adal_sbefifo adal_sbefifo_t;
-
-#define to_sbefifo_adal(x) container_of((x), struct adal_sbefifo, adal)
+#define ADAL_SBEFIFO_FSI_OFFSET 0x2400
 
 adal_t * adal_sbefifo_open(const char * device, int flags) {
-        int idx = 1;
-        char *str;
-        char *prev = NULL;
-        adal_sbefifo_t *sbefifo;
-
-	sbefifo = (adal_sbefifo_t *)malloc(sizeof(*sbefifo));
-	if (sbefifo == NULL) {
-		return NULL;
-	}
-
-	memset(sbefifo, 0, sizeof(*sbefifo));
-
-        sbefifo->adal.fd = open(device, flags);
-	if (sbefifo->adal.fd == -1)
-        {   
-                free(sbefifo);
-                sbefifo = NULL;
-		return NULL;
-	}
-
-        str = strstr((char *)device, "sbefifo");
-        while (str)
-        {
-                prev = str;
-                str = strstr(str+1, "sbefifo");
-        }
-
-        if (prev)
-                idx = strtol(prev+7, NULL, 10);
-
-        if (idx > 1)
-                sbefifo->offset = P1_SLAVE_OFFSET;
-
-	return &sbefifo->adal;
+        return adal_base_open(device, flags);
 }
 
 ssize_t adal_sbefifo_submit(adal_t * adal, adal_sbefifo_request * request,
@@ -220,21 +167,10 @@ ssize_t adal_sbefifo_submit(adal_t * adal, adal_sbefifo_request * request,
 }
 
 int adal_sbefifo_close(adal_t * adal) {
-	int rc = -1;
-
-        adal_sbefifo_t *sbefifo = to_sbefifo_adal(adal);
-
-	if (!adal)
-		return 0;
-
-	rc = close(adal->fd);
-
-	free(sbefifo);
-	adal = NULL;
-
-	return rc;
+	return adal_base_close(adal);
 }
 
+// adal device expected here is the raw fsi device
 int adal_sbefifo_request_reset(adal_t * adal) 
 {
         int rc = -1;
@@ -254,59 +190,27 @@ int adal_sbefifo_unlock(adal_t * adal, int scope) {
 
 }
 
+// this requires the raw fsi adal device
 ssize_t adal_sbefifo_get_register(adal_t *adal, int registerNo,
 			       unsigned long *data)
 {
 
 	int rc;
-        int fd = 0;
-        uint32_t fsiIdx = 0;
-        for (fsiIdx=0; fsiIdx < fsirawSize; fsiIdx++ )
-        {
-                // try an open to find a valid file
-                fd = open(fsiraw[fsiIdx], O_RDONLY);
-                if (fd != -1)
-                {
-                        break;
-                }
-                close(fd);
-        } 
-	adal_sbefifo_t *sbefifo = to_sbefifo_adal(adal);
 
-	if (fd == -1)
-		return -ENODEV;
-
-	lseek(fd, sbefifo->offset + SBEFIFO_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
-	rc = read(fd, data, 4);
+	lseek(adal->fd, ADAL_SBEFIFO_FSI_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
+	rc = read(adal->fd, data, 4);
 	
-	close(fd);
 	return rc;
 }
 
+// this requires the raw fsi adal device
 ssize_t adal_sbefifo_set_register(adal_t *adal, int registerNo,
 			       unsigned long data)
 {
 	int rc;
-        int fd = 0;
-        uint32_t fsiIdx = 0;
-        for (fsiIdx=0; fsiIdx < fsirawSize; fsiIdx++ )
-        {
-                // try an open to find a valid file
-                fd = open(fsiraw[fsiIdx], O_WRONLY);
-                if (fd != -1)
-                {
-                        break;
-                }
-                close(fd);
-        } 
-	adal_sbefifo_t *sbefifo = to_sbefifo_adal(adal);
 
-	if (fd == -1)
-		return -ENODEV;
-
-	lseek(fd, sbefifo->offset + SBEFIFO_ENGINE_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
-	rc = write(fd, &data, 4);
+	lseek(adal->fd, ADAL_SBEFIFO_FSI_OFFSET + ((registerNo & ~0xFFFFFF00) * 4), SEEK_SET);
+	rc = write(adal->fd, &data, 4);
 	
-	close(fd);
 	return rc;
 }

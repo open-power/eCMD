@@ -1,6 +1,6 @@
 //IBM_PROLOG_BEGIN_TAG
 /* 
- * Copyright 2003,2017 IBM International Business Machines Corp.
+ * Copyright 2003,2023 IBM International Business Machines Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,10 @@ deviceString(""),
 timeout(0),
 replyLength(0)
 {
-    version = 0x1;
+    // version 0x1 is base sbefifo to a proc based solely on deviceString
+    // version 0x2 is base sbefifo to a proc + port (not supported on bmc croserver)
+    // version 0x3 is sbefifo to another device based on deviceString + port
+    version = 0x3;
     type = SBEFIFO;
 }
 
@@ -50,8 +53,9 @@ SBEFIFOInstruction::~SBEFIFOInstruction(void)
 {
 }
 
-uint32_t SBEFIFOInstruction::setup(InstructionCommand i_command, std::string &i_deviceString, uint32_t i_timeout, uint32_t i_replyLength, uint32_t i_flags, ecmdDataBuffer * i_data)
+uint32_t SBEFIFOInstruction::setup(InstructionCommand i_command, std::string &i_deviceString, uint32_t i_timeout, uint32_t i_replyLength, uint32_t i_flags, ecmdDataBuffer * i_data, uint32_t i_port)
 {
+    version = 0x1;
     deviceString = i_deviceString;
     command = i_command;
     timeout = i_timeout;
@@ -60,6 +64,11 @@ uint32_t SBEFIFOInstruction::setup(InstructionCommand i_command, std::string &i_
     if(i_data != NULL)
     {
         i_data->shareBuffer(&data);
+    }
+    if ( i_port != UINT32_MAX )
+    {
+        port = i_port;
+        version = 0x3;
     }
     return 0;
 }
@@ -90,6 +99,25 @@ uint32_t SBEFIFOInstruction::execute(ecmdDataBuffer & o_data, InstructionStatus 
             if (rc)
             {
                 o_status.rc = rc;
+                break;
+            }
+
+            /* Set the sbefifo cmd timeout (s) based on timeout (ms) passed in */
+            uint32_t l_tmpSecondsFromTimeout = timeout / 1000;
+            rc = sbefifo_set_cmd_timeout(*io_handle, l_tmpSecondsFromTimeout, o_status);
+            if( rc )
+            {
+                // should only get here if the driver supports this function and we get an error setting it
+                // method sets up o_status.rc and rc appropriately
+                break;
+            }
+
+            /* Set the sbefifo read timeout (s) based on timeout (ms) passed in */
+            rc = sbefifo_set_read_timeout(*io_handle, l_tmpSecondsFromTimeout, o_status);
+            if( rc )
+            {
+                // should only get here if the driver supports this function and we get an error setting it
+                // method sets up o_status.rc and rc appropriately
                 break;
             }
 
@@ -178,18 +206,24 @@ uint32_t SBEFIFOInstruction::flatten(uint8_t * o_data, uint32_t i_len) const
         o_ptr[2] = htonl(flags);
         o_ptr[3] = htonl(timeout);
         o_ptr[4] = htonl(replyLength);
+        uint32_t offset = 5;
+        if( version == 0x3 )
+        {
+            o_ptr[offset] = htonl(port);
+            offset++;
+        }
         uint32_t deviceStringSize = deviceString.size() + 1;
         if (deviceStringSize % sizeof(uint32_t))
         {
             deviceStringSize += (sizeof(uint32_t) - (deviceStringSize % sizeof(uint32_t)));
         }
-        o_ptr[5] = htonl(deviceStringSize);
+        o_ptr[offset] = htonl(deviceStringSize);
         uint32_t dataSize = data.flattenSize();
-        data.flatten((uint8_t *) (o_ptr + 7 + (deviceStringSize / sizeof(uint32_t))), dataSize);
-        o_ptr[6] = htonl(dataSize);
+        data.flatten((uint8_t *) (o_ptr + offset + 2 + (deviceStringSize / sizeof(uint32_t))), dataSize);
+        o_ptr[offset + 1] = htonl(dataSize);
         if (deviceString.size() > 0)
         {
-            strcpy(((char *)(o_ptr + 7)), deviceString.c_str());
+            strcpy(((char *)(o_ptr + offset + 2)), deviceString.c_str());
         }
     }
     return rc;
@@ -201,19 +235,28 @@ uint32_t SBEFIFOInstruction::unflatten(const uint8_t * i_data, uint32_t i_len)
     uint32_t * i_ptr = (uint32_t *) i_data;
 
     version = ntohl(i_ptr[0]);
-    if(version == 0x1)
+    if( version == 0x2 )
+    {
+        error = rc = SERVER_UNKNOWN_INSTRUCTION_VERSION;
+    }
+    else if( version <= 0x3 )
     {
         command = (InstructionCommand) ntohl(i_ptr[1]);
         flags = ntohl(i_ptr[2]);
         timeout = ntohl(i_ptr[3]);
         replyLength = ntohl(i_ptr[4]);
-        uint32_t deviceStringSize = ntohl(i_ptr[5]);
-        uint32_t dataSize = ntohl(i_ptr[6]);
-        rc = data.unflatten((uint8_t *) (i_ptr + 7 + (deviceStringSize / sizeof(uint32_t))), dataSize);
-        if (rc) { error = rc; }
-        if (deviceStringSize > 0)
+        uint32_t offset = 5;
+        if( version == 0x3 )
         {
-            deviceString = ((char *)(i_ptr + 7));
+            port = ntohl(i_ptr[offset]); offset++;
+        }
+        uint32_t deviceStringSize = ntohl(i_ptr[offset]);
+        uint32_t dataSize = ntohl(i_ptr[offset + 1]);
+        rc = data.unflatten((uint8_t *) (i_ptr + offset + 2 + (deviceStringSize / sizeof(uint32_t))), dataSize);
+        if( rc ) { error = rc; }
+        if( deviceStringSize > 0 )
+        {
+            deviceString = ((char *)(i_ptr + offset + 2));
         }
     }
     else
@@ -228,6 +271,7 @@ uint32_t SBEFIFOInstruction::flattenSize(void) const
     // FIXME remove data and timeout and change to different size for REQUEST_RESET
     //
     uint32_t size = 7 * sizeof(uint32_t); // version, command, flags, timeout, replyLength, deviceStringSize, dataSize
+    if( version == 0x3 ) size += sizeof(uint32_t); // port
     uint32_t deviceStringSize = deviceString.size() + 1;
     if (deviceStringSize % sizeof(uint32_t)) {
       deviceStringSize += (sizeof(uint32_t) - (deviceStringSize % sizeof(uint32_t)));
@@ -249,6 +293,7 @@ std::string SBEFIFOInstruction::dumpInstruction(void) const
     oss << "deviceString  : " << deviceString << std::endl;
     oss << "timeout       : " << timeout << std::endl;
     oss << "replyLength   : " << replyLength << std::endl;
+    oss << "port          : " << port << std::endl;
     oss << "data length   : " << data.getBitLength() << std::endl;
     oss << "data          : ";
     for(uint32_t j = 0; j < data.getWordLength(); j++)
@@ -265,8 +310,13 @@ uint64_t SBEFIFOInstruction::getHash(void) const {
     uint32_t devstrhash = 0x0;
     uint32_t rc = devicestring_genhash(deviceString, devstrhash);
     uint64_t hash64 = 0x0ull;
-    hash64 |= ((0x0000000Full & type)     << 60);
-    if (rc == 0) {
+    hash64 |= ((0x0000000Full & type)     << 60);   // 4 bits for type
+    if( version == 0x3 )
+    {
+        hash64 |= ((0x000000FFull & port)     << 52);   // 8 bits for port
+    }
+    if (rc == 0)
+    {
         hash64 |= ((uint64_t) devstrhash);
     }
     return hash64;

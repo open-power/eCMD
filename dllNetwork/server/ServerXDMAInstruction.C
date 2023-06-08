@@ -39,6 +39,8 @@
 #include <linux/types.h> // needed for __u64, etc types
 #include <delay.h>
 
+#include <adal_base.h>
+
 extern bool global_server_debug;
 
 // data/structures/defines from aspeed-xdma.h
@@ -80,20 +82,20 @@ uint32_t ServerXDMAInstruction::xdma_open(Handle ** handle, InstructionStatus & 
     }
 
 #ifdef TESTING
-    TEST_PRINT("*handle = open(%s, O_RDWR)\n", device.str().c_str());
+    TEST_PRINT("*handle = adal_base_open(%s, O_RDWR)\n", device.str().c_str());
     *handle = (Handle *) 55;
 #else
-    *handle = (Handle *) open(device.str().c_str(), O_RDWR);
+    *handle = (Handle *) adal_base_open(device.str().c_str(), O_RDWR);
 #endif
 
     if ( flags & INSTRUCTION_FLAG_SERVER_DEBUG )
     {
-        errstr << "SERVER_DEBUG : open() *handle = " << *handle << ::std::endl;
+        errstr << "SERVER_DEBUG : adal_base_open() *handle = " << ((adal_t *)handle)->fd << ::std::endl;
         o_status.errorMessage.append(errstr.str());
         errstr.str(""); errstr.clear();
     }
 
-    if ( *handle == NULL || (*handle != NULL && (long)*handle < 0) )
+    if ( *handle == NULL || (*handle != NULL && ((adal_t *)handle)->fd < 0) )
     {
         errstr << "ServerXDMAInstruction::xdma_open Problem opening xdma device " << device.str() << " errno " << errno << std::endl;
         o_status.errorMessage.append(errstr.str());
@@ -108,8 +110,7 @@ uint32_t ServerXDMAInstruction::xdma_open(Handle ** handle, InstructionStatus & 
 void ServerXDMAInstruction::xdma_ffdc(Handle ** handle, InstructionStatus & o_status)
 {
     uint32_t l_rc = xdma_close(*handle);
-    *handle = NULL;
-    if ( l_rc ) o_status.rc = SERVER_XDMA_CLOSE_FAIL;
+    if ( l_rc ) o_status.rc = l_rc;
 }
 
 void ServerXDMAInstruction::xdma_reset(Handle * handle, InstructionStatus & o_status)
@@ -127,14 +128,14 @@ void ServerXDMAInstruction::xdma_reset(Handle * handle, InstructionStatus & o_st
     }
 
 #ifdef TESTING
-    TEST_PRINT("ioctl(%d, ASPEED_XDMA_IOCTL_RESET)\n", (int)handle);
+    TEST_PRINT("ioctl(%d, ASPEED_XDMA_IOCTL_RESET)\n", handle->fd);
 #else
-    l_rc = ioctl((long) handle, ASPEED_XDMA_IOCTL_RESET);
+    l_rc = ioctl( ((adal_t *)handle)->fd, ASPEED_XDMA_IOCTL_RESET );
 #endif
 
     if ( flags & INSTRUCTION_FLAG_SERVER_DEBUG )
     {
-        errstr << "SERVER_DEBUG : ioctl() *handle = " << (long)handle << ::std::endl;
+        errstr << "SERVER_DEBUG : ioctl() *handle = " << ((adal_t *)handle)->fd << ::std::endl;
         o_status.errorMessage.append(errstr.str());
         errstr.str(""); errstr.clear();
     }
@@ -153,10 +154,12 @@ uint32_t ServerXDMAInstruction::xdma_close(Handle * handle)
 {
     uint32_t l_rc = 0;
 #ifdef TESTING
-    TEST_PRINT("close()\n");
+    TEST_PRINT("adal_base_close()\n");
 #else
-    close((long) handle);
+    l_rc = adal_base_close((adal_t *) handle);
 #endif
+    if( l_rc )
+        l_rc = SERVER_XDMA_CLOSE_FAIL;
     return l_rc;
 }
 
@@ -169,6 +172,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
     std::ostringstream errstr;
     uint8_t * l_buffer = NULL;
     uint8_t * l_mmap = NULL;
+    int fd = ((adal_t *) i_handle)->fd;
 
     struct aspeed_xdma_op l_xdma_op;
     struct pollfd l_pollfd;
@@ -186,25 +190,24 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
             break;
         }
 
-        uint32_t l_tmpLen = 0;
-
+        uint32_t l_byteLen = 0;
         if ( readLength )
-            l_tmpLen = readLength;
+            l_byteLen = readLength % 8 ? (readLength / 8) + 1 : readLength / 8;
         else
-            l_tmpLen = data->getByteLength();
+            l_byteLen = data->getByteLength();
 
         // determine alignment
         const int l_pgSize = getpagesize();
-        uint32_t l_numPages = l_tmpLen / l_pgSize;
+        uint32_t l_numPages = l_byteLen / l_pgSize;
         l_len = l_numPages * l_pgSize;
-        if ( l_tmpLen > l_len ) l_len += l_pgSize; 
+        if ( l_byteLen > l_len ) l_len += l_pgSize; 
 
         if ( readLength )
         {
             // setup the o_data buffer to the appropriate size
             // o_data will be readLength size since l_len could be larger
             // only readLength size will be copied into o_data at end of op
-            o_data.setByteLength( readLength );
+            o_data.setBitLength( readLength );
             l_buffer = new uint8_t[l_len];
             if ( l_buffer == 0 )
             {
@@ -240,7 +243,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
             }
         }
 
-        l_mmap = static_cast<uint8_t*>(mmap(NULL, l_len, (readLength ? PROT_READ : PROT_WRITE), MAP_SHARED, (long)i_handle, 0));
+        l_mmap = static_cast<uint8_t*>(mmap(NULL, l_len, (readLength ? PROT_READ : PROT_WRITE), MAP_SHARED, fd, 0));
         if ( l_mmap == 0 )
         {
             errstr << "ServerXDMAInstruction::xdma_command could not allocate mmap errno " << errno << std::endl;
@@ -253,7 +256,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
         if ( !readLength )
         {
             // copy the input data buffer to write to the mmap
-            memcpy(l_mmap, l_buffer, l_len);
+            memcpy(l_mmap, l_buffer, l_byteLen);
         }
 
         errno = 0;
@@ -261,21 +264,21 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
         // setup the xdma command
         l_xdma_op.direction = (readLength ? ASPEED_XDMA_DIRECTION_DOWNSTREAM : ASPEED_XDMA_DIRECTION_UPSTREAM);
         l_xdma_op.host_addr = address;
-        l_xdma_op.len = l_len;
+        l_xdma_op.len = l_byteLen;
 
         if ( flags & INSTRUCTION_FLAG_SERVER_DEBUG )
         {
-            errstr << "SERVER_DEBUG : write(*handle = " << (long)i_handle << ", addr=" << std::hex << std::setfill('0') << std::setw(8) << l_xdma_op.host_addr;
+            errstr << "SERVER_DEBUG : write(*handle = " << fd << ", addr=" << std::hex << std::setfill('0') << std::setw(8) << l_xdma_op.host_addr;
             errstr << " len=" << std::dec << l_xdma_op.len << " direction=" << l_xdma_op.direction << ", size=" << sizeof(l_xdma_op) << ")" << ::std::endl;
             o_status.errorMessage.append(errstr.str());
             errstr.str(""); errstr.clear();
         }
 
 #ifdef TESTING
-        TEST_PRINT("write(%d, addr=%08X len=%d upstream=%d, size(%d))\n", (int)i_handle, l_xdma_op.host_addr, l_xdma_op.len, l_xdma_op.upstream, sizeof(l_xdma_op));
+        TEST_PRINT("write(%d, addr=%08X len=%d upstream=%d, size(%d))\n", fd, l_xdma_op.host_addr, l_xdma_op.len, l_xdma_op.upstream, sizeof(l_xdma_op));
         l_rc = 0;
 #else
-        l_rc = write( (long)i_handle, &l_xdma_op, sizeof(l_xdma_op) );
+        l_rc = write( fd, &l_xdma_op, sizeof(l_xdma_op) );
 #endif
         if ( l_rc < 0 )
         {
@@ -295,7 +298,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
 
         // polling stuff
         errno = 0;
-        l_pollfd.fd = (long)i_handle;
+        l_pollfd.fd = fd;
         l_pollfd.events = POLLIN;
         l_intrc = poll( &l_pollfd, 1, -1 );
         if ( l_intrc < 0 )
@@ -309,6 +312,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
 
         if ( readLength )
         {
+            memcpy(l_buffer, l_mmap, o_data.getByteLength());
             // copy the buffer to o_data
             l_uintrc = o_data.insert( l_buffer, 0, readLength );
             if ( l_uintrc )
@@ -319,20 +323,9 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
                 l_rc = -1;
                 break;
             }
-
-            errno = 0;
-            l_intrc = msync( l_buffer, l_len, MS_SYNC );
-            if ( !l_intrc )
-            {
-                errstr << "ServerXDMAInstruction::xdma_command error during msync: rc:" << l_intrc << ", errno:" << errno << std::endl;
-                o_status.errorMessage.append(errstr.str());
-                errstr.str(""); errstr.clear();
-                l_rc = -1;
-                break;
-            }
         }
 
-        l_rc = readLength;
+        l_rc = o_data.getByteLength();
 
     } while (0);
 
@@ -340,7 +333,7 @@ ssize_t ServerXDMAInstruction::xdma_command(Handle * i_handle, ecmdDataBufferBas
     if ( l_mmap )
     {
         l_intrc = munmap( l_mmap, l_len );
-        if ( !l_intrc )
+        if ( l_intrc )
         {
             errstr << "ServerXDMAInstruction::xdma_command error during munmap: rc:" << l_intrc << ", errno:" << errno << std::endl;
             o_status.errorMessage.append(errstr.str());

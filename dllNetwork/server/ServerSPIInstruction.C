@@ -27,6 +27,8 @@
 #include <string.h>
 #include <delay.h>
 
+#include <adal_base.h>
+
 extern bool global_server_debug;
 
 uint32_t ServerSPIInstruction::spi_open(Handle ** handle, InstructionStatus & o_status)
@@ -45,22 +47,22 @@ uint32_t ServerSPIInstruction::spi_open(Handle ** handle, InstructionStatus & o_
 
     if (flags & INSTRUCTION_FLAG_SERVER_DEBUG)
     {
-        snprintf(errstr, 200, "SERVER_DEBUG : open(%s, O_RDWR | O_SYNC)\n", device);
+        snprintf(errstr, 200, "SERVER_DEBUG : adal_base_open(%s, O_RDWR | O_SYNC)\n", device);
         o_status.errorMessage.append(errstr);
     }
 
 #ifdef TESTING
-    TEST_PRINT("*handle = open(%s, O_RDWR | O_SYNC);\n", device);
+    TEST_PRINT("*handle = adal_base_open(%s, O_RDWR | O_SYNC);\n", device);
     *handle = (Handle *) 55;
 #else
-    *handle = (Handle *) open(device, O_RDWR | O_SYNC);
+    *handle = (Handle *) adal_base_open(device, O_RDWR | O_SYNC);
 #endif
     if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
-        snprintf(errstr, 200, "SERVER_DEBUG : open() *handle = %p, errno %d\n", *handle, errno);
+        snprintf(errstr, 200, "SERVER_DEBUG : adal_base_open() *handle = %p, errno %d\n", *handle, errno);
         o_status.errorMessage.append(errstr);
     }
 
-    if ( *handle == NULL || (*handle != NULL && (long)*handle < 0) ) {
+    if ( *handle == NULL || (*handle != NULL && ((adal_t *)handle)->fd < 0) ) {
         snprintf(errstr, 200, "ServerSPIInstruction::spi_open Problem opening SPI device %s : errno %d\n", device, errno);
         o_status.errorMessage.append(errstr);
         rc = o_status.rc = SERVER_SPI_OPEN_FAIL;
@@ -77,7 +79,6 @@ void ServerSPIInstruction::spi_ffdc(Handle ** handle, InstructionStatus & o_stat
     // adal_iic_ffdc_unlock
 
     uint32_t rc = spi_close(*handle);
-    *handle = NULL;
     if (rc) o_status.rc = SERVER_SPI_CLOSE_FAIL;
 }
 
@@ -86,10 +87,13 @@ uint32_t ServerSPIInstruction::spi_close(Handle * handle)
     uint32_t rc = 0;
     // close iic device
 #ifdef TESTING
-    TEST_PRINT("close()\n");
+    TEST_PRINT("adal_base_close()\n");
 #else
-    close((long) handle);
+    rc = adal_base_close((adal_t *) handle);
 #endif
+    if( rc )
+        rc = SERVER_SPI_CLOSE_FAIL;
+
     return rc;
 }
 
@@ -98,7 +102,7 @@ ssize_t ServerSPIInstruction::spi_command(Handle * i_handle, ecmdDataBufferBase 
     ssize_t rc = 0;
     char errstr[200];
 
-    int fd = (long) i_handle;
+    int fd = ((adal_t *)i_handle)->fd;
     uint32_t readBytes = readLength % 8 ? (readLength / 8) + 1 : readLength / 8;
     uint8_t *l_buf = NULL;
 
@@ -161,20 +165,20 @@ ssize_t ServerSPIInstruction::spi_command(Handle * i_handle, ecmdDataBufferBase 
 
             if (flags & INSTRUCTION_FLAG_SERVER_DEBUG)
             {
-                snprintf(errstr, 200, "SERVER_DEBUG : read() rc = %d, errno = %d\n", rc, errno);
+                snprintf(errstr, 200, "SERVER_DEBUG : read() rc = %zd, errno = %d\n", rc, errno);
                 o_status.errorMessage.append(errstr);
             }
 
             if ( rc < 0 )
             {
-                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during read: rc %d, errno: %d\n", rc, errno);
+                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during read: rc %zd, errno: %d\n", rc, errno);
                 o_status.errorMessage.append(errstr);
                 break;
             }
 
             if ( rc != (ssize_t)readBytes )
             {
-                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during read: rc %d != readBytes(%d)\n", rc, readBytes);
+                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during read: rc %zd != readBytes(%d)\n", rc, readBytes);
                 o_status.errorMessage.append(errstr);
                 break;
             }
@@ -213,20 +217,20 @@ ssize_t ServerSPIInstruction::spi_command(Handle * i_handle, ecmdDataBufferBase 
 
             if (flags & INSTRUCTION_FLAG_SERVER_DEBUG)
             {
-                snprintf(errstr, 200, "SERVER_DEBUG : write() rc = %d, errno = %d\n", rc, errno);
+                snprintf(errstr, 200, "SERVER_DEBUG : write() rc = %zd, errno = %d\n", rc, errno);
                 o_status.errorMessage.append(errstr);
             }
 
             if ( rc < 0 )
             {
-                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during write: rc %d, errno: %d\n", rc, errno);
+                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during write: rc %zd, errno: %d\n", rc, errno);
                 o_status.errorMessage.append(errstr);
                 break;
             }
 
             if ( rc != (ssize_t)writeBytes )
             {
-                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during write: rc %d != writeBytes(%d)\n", rc, writeBytes);
+                snprintf(errstr, 200, "ServerSPIInstruction::spi_command error during write: rc %zd != writeBytes(%d)\n", rc, writeBytes);
                 o_status.errorMessage.append(errstr);
                 break;
             }
