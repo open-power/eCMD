@@ -192,7 +192,7 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_set_cmd_timeout(Handle * i_handle, ui
     uint32_t rc = 0;
     char errstr[200];
 
-    uint32_t l_timeoutInSeconds = (i_timeoutInSeconds > SBEFIFO_DEVICE_TIMEOUT_LIMIT) ? SBEFIFO_DEVICE_TIMEOUT_LIMIT : i_timeoutInSeconds;
+    uint32_t l_timeoutInSeconds = i_timeoutInSeconds;
 
     if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
         snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_CMD_TIMEOUT_SECONDS, %d)\n", l_timeoutInSeconds);
@@ -231,7 +231,7 @@ uint32_t ServerSBEFIFOInstruction::sbefifo_set_read_timeout(Handle * i_handle, u
     uint32_t rc = 0;
     char errstr[200];
 
-    uint32_t l_timeoutInSeconds = (i_timeoutInSeconds > SBEFIFO_DEVICE_TIMEOUT_LIMIT) ? SBEFIFO_DEVICE_TIMEOUT_LIMIT : i_timeoutInSeconds;
+    uint32_t l_timeoutInSeconds = i_timeoutInSeconds;
 
     if (flags & INSTRUCTION_FLAG_SERVER_DEBUG) {
         snprintf(errstr, 200, "SERVER_DEBUG : ioctl(*handle, FSI_SBEFIFO_READ_TIMEOUT_SECONDS, %d)\n", l_timeoutInSeconds);
