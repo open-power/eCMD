@@ -44,9 +44,6 @@ class ServerSBEFIFOInstruction : public SBEFIFOInstruction
     uint32_t fsi_open(Handle** handle, InstructionStatus & o_status);
     uint32_t fsi_close(Handle* handle);
 
-    // device driver hard ceiling for the timeout value
-    static constexpr uint32_t SBEFIFO_DEVICE_TIMEOUT_LIMIT = 240;
-
 };
 
 #endif // _ServerFSIInstruction_H
